@@ -4,6 +4,8 @@ class Font::TTF {
     use Font::TTF::Util;
     use Font::TTF::Defs :Sfnt-Struct;
     use Font::TTF::Head;
+    use Font::TTF::Hhea;
+    use Font::TTF::Vhea;
     use NativeCall;
 
     class Offsets is repr('CStruct') does Sfnt-Struct {
@@ -47,7 +49,11 @@ class Font::TTF {
     has %!position;
     has %!length;
     has Directory @!directories;
-    has %!tables = :head(Font::TTF::Head);
+    has %!tables = %(
+        :head(Font::TTF::Head),
+        :hhea(Font::TTF::Hhea),
+        :vhea(Font::TTF::Vhea),
+    );
         
     multi method open(Font::TTF:U: |c) {
         self.new.open(|c);

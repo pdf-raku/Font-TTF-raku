@@ -16,6 +16,8 @@
       "Font::TTF": "lib/Font/TTF.rakumod",
       "Font::TTF::Defs": "lib/Font/TTF/Defs.rakumod",
       "Font::TTF::Head": "lib/Font/TTF/Head.rakumod",
+      "Font::TTF::Hhea": "lib/Font/TTF/Hhea.rakumod",
+      "Font::TTF::Vhea": "lib/Font/TTF/Vhea.rakumod",
       "Font::TTF::Util": "lib/Font/TTF/Util.rakumod"
   },
   "resources": [

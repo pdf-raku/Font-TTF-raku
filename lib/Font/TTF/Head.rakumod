@@ -1,18 +1,18 @@
 use Font::TTF::Defs :types, :Sfnt-Struct;
 
 class Font::TTF::Head is repr('CStruct') does Sfnt-Struct {
-    HAS fixed  $.version;
-    HAS fixed  $.fontRevision;
+    HAS Fixed  $.version;
+    HAS Fixed  $.fontRevision;
     has uint32 $.checkSumAdjustment;
     has uint32 $.magicNumber;
     has uint16 $.flags;
     has uint16 $.unitsPerEm;
-    has longdt $.created;
-    has longdt $.modified;
-    has fword  $.xMin;
-    has fword  $.yMin;
-    has fword  $.xMax;
-    has fword  $.yMax;
+    has longDateTime $.created;
+    has longDateTime $.modified;
+    has FWord  $.xMin;
+    has FWord  $.yMin;
+    has FWord  $.xMax;
+    has FWord  $.yMax;
     has uint16 $.macStyle;
     has uint16 $.lowestRecPPEM;
     has int16  $.fontDirectionHint;
