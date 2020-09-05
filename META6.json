@@ -17,6 +17,10 @@
       "Font::TTF::Defs": "lib/Font/TTF/Defs.rakumod",
       "Font::TTF::Head": "lib/Font/TTF/Head.rakumod",
       "Font::TTF::Hhea": "lib/Font/TTF/Hhea.rakumod",
+      "Font::TTF::Maxp": "lib/Font/TTF/Maxp.rakumod",
+      "Font::TTF::OS2" : "lib/Font/TTF/OS2.rakumod",
+      "Font::TTF::PCLT": "lib/Font/TTF/PCLT.rakumod",
+      "Font::TTF::Post": "lib/Font/TTF/Post.rakumod",
       "Font::TTF::Vhea": "lib/Font/TTF/Vhea.rakumod",
       "Font::TTF::Util": "lib/Font/TTF/Util.rakumod"
   },

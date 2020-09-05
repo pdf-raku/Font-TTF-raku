@@ -5,6 +5,10 @@ class Font::TTF {
     use Font::TTF::Defs :Sfnt-Struct;
     use Font::TTF::Head;
     use Font::TTF::Hhea;
+    use Font::TTF::Maxp;
+    use Font::TTF::OS2;
+    use Font::TTF::PCLT;
+    use Font::TTF::Post;
     use Font::TTF::Vhea;
     use NativeCall;
 
@@ -52,8 +56,15 @@ class Font::TTF {
     has %!tables = %(
         :head(Font::TTF::Head),
         :hhea(Font::TTF::Hhea),
+        :maxp(Font::TTF::Maxp),
+        'OS/2' =>Font::TTF::OS2,
+        :post(Font::TTF::Post),
+        :PCLT(Font::TTF::PCLT),
         :vhea(Font::TTF::Vhea),
     );
+    method tables {
+        %!position.sort(*.value).map(*.key);
+    }
         
     multi method open(Font::TTF:U: |c) {
         self.new.open(|c);
