@@ -87,7 +87,7 @@ class Font::TTF {
         my $prev;
         for %!position.pairs.sort(*.value) {
             if $prev.defined {
-                %!length{$prev.key} = .value - $prev.value - 1;
+                %!length{$prev.key} = .value - $prev.value;
             }
             $prev = $_;
         }
@@ -97,15 +97,15 @@ class Font::TTF {
         without %!tables{$table} {
             with %!position{$table} -> $pos {
                 $!fh.seek($pos, SeekFromBeginning);
-                my $size = nativesizeof($_);
-                my $len = %!length{$table} // Inf;
-                if $len && $len < $size {
-                    my $buf = $!fh.read($len);
-                    $buf.reallocate($size);
-                    $_ .= unpack($buf);
+                my $size = .packed-size;
+                my $len = %!length{$table};
+                if !$len || $len < $size {
+                    # last or truncated record
+                    my $buf = $!fh.read($len // $size);
+                    $_ .= unpack($buf, :pad);
                 }
                 else {
-                    $_ .= read($!fh);
+                    $_ .= read($!fh, :pad);
                 }
             }
         }

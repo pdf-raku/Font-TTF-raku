@@ -32,7 +32,7 @@ is $hhea.minLeftSideBearing, -375;
 is $hhea.minRightSideBearing, -375;
 is $hhea.xMaxExtent, 2636;
 is $hhea.caretSlopeRise, 1;
-is $hhea.numOfLongHorMetrics, 256;
+is $hhea.numOfLongHorMetrics, 268;
 
 my Font::TTF::Vhea $vhea = $ttf.load('vhea');
 is-deeply $vhea, Font::TTF::Vhea;
@@ -77,7 +77,6 @@ is $maxp.maxInstructionDefs, 0;
 is $maxp.maxStackElements, 1045;
 is $maxp.maxSizeOfInstructions, 1384;
 is $maxp.maxComponentElements, 3;
-todo "investigate";
 is $maxp.maxComponentDepth, 1;
 
 done-testing;
