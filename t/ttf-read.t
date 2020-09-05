@@ -2,10 +2,11 @@ use Test;
 use Font::TTF;
 use Font::TTF::Head;
 use Font::TTF::Hhea;
+use Font::TTF::Maxp;
 use Font::TTF::OS2;
 use Font::TTF::PCLT;
 use NativeCall;
-plan 35;
+plan 50;
 
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
@@ -60,5 +61,23 @@ is $post.minMemType42, 0;
 is $post.maxMemType42, 0;
 is $post.minMemType1, 0;
 is $post.maxMemType1, 0;
+
+my Font::TTF::Maxp $maxp = $ttf.load('maxp');
+is $maxp.version, 1;
+is $maxp.numGlyphs, 268;
+is $maxp.maxPoints, 77;
+is $maxp.maxContours, 7;
+is $maxp.maxComponentPoints, 66;
+is $maxp.maxComponentContours, 4;
+is $maxp.maxZones, 2;
+is $maxp.maxTwilightPoints, 16;
+is $maxp.maxStorage, 64;
+is $maxp.maxFunctionDefs, 7;
+is $maxp.maxInstructionDefs, 0;
+is $maxp.maxStackElements, 1045;
+is $maxp.maxSizeOfInstructions, 1384;
+is $maxp.maxComponentElements, 3;
+todo "investigate";
+is $maxp.maxComponentDepth, 1;
 
 done-testing;
