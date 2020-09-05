@@ -91,6 +91,7 @@ class Font::TTF {
             }
             $prev = $_;
         }
+        %!length{.key} = .value with $prev;
     }
 
     method load(Str $table where {%!tables{$_}:exists}) {
@@ -99,14 +100,8 @@ class Font::TTF {
                 $!fh.seek($pos, SeekFromBeginning);
                 my $size = .packed-size;
                 my $len = %!length{$table};
-                if !$len || $len < $size {
-                    # last or truncated record
-                    my $buf = $!fh.read($len // $size);
-                    $_ .= unpack($buf, :pad);
-                }
-                else {
-                    $_ .= read($!fh, :pad);
-                }
+                my $buf = $!fh.read($len);
+                $_ .= unpack($buf, :pad);
             }
         }
         %!tables{$table};
