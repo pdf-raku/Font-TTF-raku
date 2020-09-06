@@ -4,6 +4,11 @@ use CStruct::Packing :Endian;
 
 constant Sfnt-Struct is export(:Sfnt-Struct) = CStruct::Packing[NetworkEndian];
 
+role Sfnt-Table[Str $tag] is export(:Sfnt-Table) does Sfnt-Struct {
+    method tag { $tag }
+    method load($loader) { $loader.load(self.tag, :class(self.WHAT)) }
+}
+
 class Fixed is export(:types) is repr('CStruct') does Sfnt-Struct {
     has int32 $.val;
     method Numeric handles<gist Str Int value> {

@@ -2,7 +2,7 @@ class Font::TTF {
 
     use CStruct::Packing :Endian;
     use Font::TTF::Util;
-    use Font::TTF::Defs :Sfnt-Struct;
+    use Font::TTF::Defs :Sfnt-Struct, :Sfnt-Table;
     use Font::TTF::Head;
     use Font::TTF::Hhea;
     use Font::TTF::Maxp;
@@ -11,6 +11,10 @@ class Font::TTF {
     use Font::TTF::Post;
     use Font::TTF::Vhea;
     use NativeCall;
+
+    our @Tables = [
+        Font::TTF::Head, Font::TTF::Hhea, Font::TTF::Maxp, Font::TTF::OS2,
+        Font::TTF::Post, Font::TTF::PCLT, Font::TTF::Vhea];
 
     class Offsets is repr('CStruct') does Sfnt-Struct {
         has uint32  $.ver;
@@ -53,15 +57,8 @@ class Font::TTF {
     has %!position;
     has %!length;
     has Directory @!directories;
-    has %!tables = %(
-        :head(Font::TTF::Head),
-        :hhea(Font::TTF::Hhea),
-        :maxp(Font::TTF::Maxp),
-        'OS/2' =>Font::TTF::OS2,
-        :post(Font::TTF::Post),
-        :PCLT(Font::TTF::PCLT),
-        :vhea(Font::TTF::Vhea),
-    );
+    has %!tables = @Tables.map: { .tag => $_ };
+
     method tables {
         %!position.sort(*.value).map(*.key);
     }
@@ -94,14 +91,14 @@ class Font::TTF {
         %!length{.key} = .value with $prev;
     }
 
-    method load(Str $table where {%!tables{$_}:exists}) {
+    method load(Str $table, :$class where Sfnt-Table = %!tables{$table}) {
         without %!tables{$table} {
             with %!position{$table} -> $pos {
                 $!fh.seek($pos, SeekFromBeginning);
                 my $size = .packed-size;
                 my $len = %!length{$table};
                 my $buf = $!fh.read($len);
-                $_ .= unpack($buf, :pad);
+                $_ = $class.unpack($buf, :pad);
             }
         }
         %!tables{$table};

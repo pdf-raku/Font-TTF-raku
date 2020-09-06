@@ -14,7 +14,7 @@ my Font::TTF:D $ttf .= open($fh);
 
 is $ttf.numTables, 17;
 
-my Font::TTF::Head $head = $ttf.load('head');
+my Font::TTF::Head $head .= load($ttf);
 
 is $head.version, 1;
 is $head.fontRevision, 2;
@@ -22,7 +22,7 @@ is $head.checkSumAdjustment, 206572268;
 is $head.magicNumber, 1594834165;
 is $head.flags, 31;
 
-my Font::TTF::Hhea $hhea = $ttf.load('hhea');
+my Font::TTF::Hhea $hhea .= load($ttf);
 is $hhea.version, 1;
 is $hhea.ascent, 1901;
 is $hhea.descent, -483;
@@ -34,16 +34,16 @@ is $hhea.xMaxExtent, 2636;
 is $hhea.caretSlopeRise, 1;
 is $hhea.numOfLongHorMetrics, 268;
 
-my Font::TTF::Vhea $vhea = $ttf.load('vhea');
+my Font::TTF::Vhea $vhea .= load($ttf);
 is-deeply $vhea, Font::TTF::Vhea;
 
-my Font::TTF::OS2 $os2 = $ttf.load('OS/2');
+my Font::TTF::OS2 $os2 .= load($ttf);
 is $os2.version, 1;
 is $os2.xAvgCharWidth, 1038;
 is $os2.usWeightClass, 400;
 is $os2.usWidthClass, 5;
 
-my Font::TTF::PCLT $pclt = $ttf.load('PCLT');
+my Font::TTF::PCLT $pclt .= load($ttf);
 
 is $pclt.version, 1;
 is $pclt.pitch, 651;
@@ -52,7 +52,7 @@ is $pclt.capHeight, 1493;
 is $pclt.strokeWeight, 0;
 is $pclt.serifStyle, 64;
 
-my Font::TTF::Post $post = $ttf.load('post');
+my Font::TTF::Post $post .= load($ttf);
 is $post.format, 2;
 is $post.italicAngle, 0;
 is $post.underlinePosition, -213;
@@ -62,7 +62,7 @@ is $post.maxMemType42, 0;
 is $post.minMemType1, 0;
 is $post.maxMemType1, 0;
 
-my Font::TTF::Maxp $maxp = $ttf.load('maxp');
+my Font::TTF::Maxp $maxp .= load($ttf);
 is $maxp.version, 1;
 is $maxp.numGlyphs, 268;
 is $maxp.maxPoints, 77;

@@ -1,6 +1,6 @@
-use Font::TTF::Defs :types, :Sfnt-Struct;
+use Font::TTF::Defs :types, :Sfnt-Table;
 
-class Font::TTF::Post is repr('CStruct') does Sfnt-Struct {
+class Font::TTF::Post is repr('CStruct') does Sfnt-Table['post'] {
     HAS Fixed	$.format;	# Format of this table
     HAS Fixed	$.italicAngle;	# Italic angle in degrees
     has FWord	$.underlinePosition;	# Underline position

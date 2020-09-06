@@ -1,6 +1,6 @@
-use Font::TTF::Defs :types, :Sfnt-Struct;
+use Font::TTF::Defs :types, :Sfnt-Table;
 
-class Font::TTF::OS2 is repr('CStruct') does Sfnt-Struct {
+class Font::TTF::OS2 is repr('CStruct') does Sfnt-Table['OS/2'] {
     has uint16	$.version;	# table version number (set to 0)
     has int16	$.xAvgCharWidth;	# average weighted advance width of lower case letters and space
     has uint16	$.usWeightClass;	# visual weight (degree of blackness or thickness) of stroke in glyphs
