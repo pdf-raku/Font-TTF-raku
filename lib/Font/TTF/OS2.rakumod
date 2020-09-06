@@ -18,9 +18,18 @@ class Font::TTF::OS2 is repr('CStruct') does Sfnt-Table['OS/2'] {
     has int16	$.yStrikeoutPosition;	# position of the strikeout stroke relative to the baseline
     has int16	$.sFamilyClass;	# classification of font-family design.
         # todo
-        my class PANOSE is repr('CStruct') {
-            has uint8 ($!b1, $!b2, $!b3, $!b4, $!b5, $!b6, $!b7, $!b8, $b9, $b10);
-        }
+    my class PANOSE is repr('CStruct') {
+        has uint8 $.bFamilyType;
+        has uint8 $.bSerifStyle;
+        has uint8 $.bWeight;
+        has uint8 $.bProportion;
+        has uint8 $.bContrast;
+        has uint8 $.bStrokeVariation;
+        has uint8 $.bArmStyle;
+        has uint8 $.bLetterForm;
+        has uint8 $.bMidline;
+        has uint8 $.bXHeight;
+    }
 
     HAS PANOSE	$.panose;	# 10 byte series of number used to describe the visual characteristics of a given typeface
     has uint32	$.ulUnicodeRange1;	# Field is split into two bit fields of 96 and 36 bits each. The low 96 bits are used to specify the Unicode blocks encompassed by the font file. The high 32 bits are used to specify the character or script sets covered by the font file. Bit assignments are pending. Set to 0
@@ -31,6 +40,9 @@ class Font::TTF::OS2 is repr('CStruct') does Sfnt-Table['OS/2'] {
    # todo
     my class achVenID is repr('CStruct') {
         has uint8 ($!b1, $!b2, $!b3, $!b4);
+        method Str handles<gist> {
+            ($!b1, $!b2, $!b3, $!b4).map(*.chr).join;
+        }
     }
     HAS	achVenID $.achVendID;	# four character identifier for the font vendor
     has uint16	$.fsSelection;	# 2-byte bit field containing information concerning the nature of the font patterns

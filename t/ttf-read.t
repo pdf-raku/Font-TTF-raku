@@ -6,7 +6,7 @@ use Font::TTF::Maxp;
 use Font::TTF::OS2;
 use Font::TTF::PCLT;
 use NativeCall;
-plan 50;
+plan 64;
 
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
@@ -21,6 +21,16 @@ is $head.fontRevision, 2;
 is $head.checkSumAdjustment, 206572268;
 is $head.magicNumber, 1594834165;
 is $head.flags, 31;
+is $head.created, '2003-04-09T15:46:00Z';
+is $head.modified, '2003-04-16T01:51:13Z';
+is $head.fontDirectionHint, 1;
+is $head.glyphDataFormat, 0;
+is $head.lowestRecPPEM, 8;
+is $head.unitsPerEm, 2048;
+is $head.xMax, 2636;
+is $head.xMin, -375;
+is $head.yMax, 1901;
+is $head.yMin, -483;
 
 my Font::TTF::Hhea $hhea .= load($ttf);
 is $hhea.version, 1;
@@ -42,6 +52,10 @@ is $os2.version, 1;
 is $os2.xAvgCharWidth, 1038;
 is $os2.usWeightClass, 400;
 is $os2.usWidthClass, 5;
+is $os2.ySubscriptXSize, 1351;
+is $os2.ySubscriptYSize, 1228;
+is $os2.achVendID, "Bits";
+is $os2.panose.bSerifStyle, 11;
 
 my Font::TTF::PCLT $pclt .= load($ttf);
 

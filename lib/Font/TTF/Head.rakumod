@@ -8,7 +8,17 @@ class Font::TTF::Head is repr('CStruct') does Sfnt-Table['head'] {
     has uint16 $.flags;
     has uint16 $.unitsPerEm;
     has longDateTime $.created;
+    sub sfnt-date(Int $date) {
+        constant SfntEpochDiff = -2082844800;
+        DateTime.new: $date + SfntEpochDiff;
+    }
+    method created {
+        sfnt-date($!created);
+    }
     has longDateTime $.modified;
+    method modified {
+        sfnt-date($!modified);
+    }
     has FWord  $.xMin;
     has FWord  $.yMin;
     has FWord  $.xMax;
