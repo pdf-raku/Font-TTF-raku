@@ -1,6 +1,6 @@
-use Font::TTF::Defs :types, :Sfnt-Table;
+use Font::TTF::Defs :types, :Sfnt-Struct, :Sfnt-Table;
 
-class Font::TTF::PCLT is repr('CStruct') does Sfnt-Table['PCLT'] {
+class Font::TTF::PCLT is repr('CStruct') does Sfnt-Struct does Sfnt-Table['PCLT'] {
     HAS Fixed   $.version;
     has uint32   $.fontNumber;
     has uFWord   $.pitch;

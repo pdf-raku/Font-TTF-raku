@@ -1,6 +1,6 @@
-use Font::TTF::Defs :types, :Sfnt-Table;
+use Font::TTF::Defs :types, :Sfnt-Struct, :Sfnt-Table;
 
-class Font::TTF::Head is repr('CStruct') does Sfnt-Table['head'] {
+class Font::TTF::Header is repr('CStruct') does Sfnt-Struct does Sfnt-Table['head'] {
     HAS Fixed  $.version;
     HAS Fixed  $.fontRevision;
     has uint32 $.checkSumAdjustment;

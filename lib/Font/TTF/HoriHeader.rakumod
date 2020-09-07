@@ -1,6 +1,6 @@
-use Font::TTF::Defs :types, :Sfnt-Table;
+use Font::TTF::Defs :types, :Sfnt-Struct, :Sfnt-Table;
 
-class Font::TTF::Hhea is repr('CStruct') does Sfnt-Table['hhea'] {
+class Font::TTF::HoriHeader is repr('CStruct') does Sfnt-Struct does Sfnt-Table['hhea'] {
     HAS Fixed	$.version;	# 0x00010000 (1.0)
     has FWord	$.ascent;	# Distance from baseline of highest ascender
     has FWord	$.descent;	# Distance from baseline of lowest descender

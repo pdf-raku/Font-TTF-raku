@@ -3,18 +3,18 @@ class Font::TTF {
     use CStruct::Packing :Endian;
     use Font::TTF::Util;
     use Font::TTF::Defs :Sfnt-Struct, :Sfnt-Table;
-    use Font::TTF::Head;
-    use Font::TTF::Hhea;
-    use Font::TTF::Maxp;
+    use Font::TTF::Header;
+    use Font::TTF::HoriHeader;
+    use Font::TTF::MaxProfile;
     use Font::TTF::OS2;
     use Font::TTF::PCLT;
-    use Font::TTF::Post;
-    use Font::TTF::Vhea;
+    use Font::TTF::Postscript;
+    use Font::TTF::VertHeader;
     use NativeCall;
 
     our @Tables = [
-        Font::TTF::Head, Font::TTF::Hhea, Font::TTF::Maxp, Font::TTF::OS2,
-        Font::TTF::Post, Font::TTF::PCLT, Font::TTF::Vhea];
+        Font::TTF::Header, Font::TTF::HoriHeader, Font::TTF::MaxProfile, Font::TTF::OS2,
+        Font::TTF::Postscript, Font::TTF::PCLT, Font::TTF::VertHeader];
 
     class Offsets is repr('CStruct') does Sfnt-Struct {
         has uint32  $.ver;

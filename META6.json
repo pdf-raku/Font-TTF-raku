@@ -15,13 +15,13 @@
   "provides": {
       "Font::TTF": "lib/Font/TTF.rakumod",
       "Font::TTF::Defs": "lib/Font/TTF/Defs.rakumod",
-      "Font::TTF::Head": "lib/Font/TTF/Head.rakumod",
-      "Font::TTF::Hhea": "lib/Font/TTF/Hhea.rakumod",
-      "Font::TTF::Maxp": "lib/Font/TTF/Maxp.rakumod",
+      "Font::TTF::Header": "lib/Font/TTF/Header.rakumod",
+      "Font::TTF::HoriHeader": "lib/Font/TTF/HoriHeader.rakumod",
+      "Font::TTF::MaxProfile": "lib/Font/TTF/MaxProfile.rakumod",
       "Font::TTF::OS2" : "lib/Font/TTF/OS2.rakumod",
       "Font::TTF::PCLT": "lib/Font/TTF/PCLT.rakumod",
-      "Font::TTF::Post": "lib/Font/TTF/Post.rakumod",
-      "Font::TTF::Vhea": "lib/Font/TTF/Vhea.rakumod",
+      "Font::TTF::Postscript": "lib/Font/TTF/Postscript.rakumod",
+      "Font::TTF::VertHeader": "lib/Font/TTF/VertHeader.rakumod",
       "Font::TTF::Util": "lib/Font/TTF/Util.rakumod"
   },
   "resources": [

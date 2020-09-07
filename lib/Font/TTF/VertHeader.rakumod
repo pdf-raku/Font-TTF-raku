@@ -1,6 +1,6 @@
-use Font::TTF::Defs :types, :Sfnt-Table;
+use Font::TTF::Defs :types, :Sfnt-Struct, :Sfnt-Table;
 
-class Font::TTF::Vhea is repr('CStruct') does Sfnt-Table['vhea'] {
+class Font::TTF::VertHeader is repr('CStruct') does Sfnt-Struct does Sfnt-Table['vhea'] {
     has Fixed	$.version;	# Version number of the Vertical Header Table (0x00011000 for the current version).
     has int16	$.vertTypoAscender;	# The vertical typographic ascender for this font. It is the distance in FUnits from the vertical center baseline to the right of the design space. This will usually be set to half the horizontal advance of full-width glyphs. For example, if the full width is 1000 FUnits, this field will be set to 500.
     has int16	$.vertTypoDescender;	# The vertical typographic descender for this font. It is the distance in FUnits from the vertical center baseline to the left of the design space. This will usually be set to half the horizontal advance of full-width glyphs. For example, if the full width is 1000 FUnits, this field will be set to -500.

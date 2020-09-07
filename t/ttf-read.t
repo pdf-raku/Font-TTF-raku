@@ -1,10 +1,12 @@
 use Test;
 use Font::TTF;
-use Font::TTF::Head;
-use Font::TTF::Hhea;
-use Font::TTF::Maxp;
+use Font::TTF::Header;
+use Font::TTF::HoriHeader;
+use Font::TTF::MaxProfile;
 use Font::TTF::OS2;
 use Font::TTF::PCLT;
+use Font::TTF::Postscript;
+use Font::TTF::VertHeader;
 use NativeCall;
 plan 64;
 
@@ -14,7 +16,7 @@ my Font::TTF:D $ttf .= open($fh);
 
 is $ttf.numTables, 17;
 
-my Font::TTF::Head $head .= load($ttf);
+my Font::TTF::Header $head .= load($ttf);
 
 is $head.version, 1;
 is $head.fontRevision, 2;
@@ -32,7 +34,7 @@ is $head.xMin, -375;
 is $head.yMax, 1901;
 is $head.yMin, -483;
 
-my Font::TTF::Hhea $hhea .= load($ttf);
+my Font::TTF::HoriHeader $hhea .= load($ttf);
 is $hhea.version, 1;
 is $hhea.ascent, 1901;
 is $hhea.descent, -483;
@@ -44,8 +46,8 @@ is $hhea.xMaxExtent, 2636;
 is $hhea.caretSlopeRise, 1;
 is $hhea.numOfLongHorMetrics, 268;
 
-my Font::TTF::Vhea $vhea .= load($ttf);
-is-deeply $vhea, Font::TTF::Vhea;
+my Font::TTF::VertHeader $vhea .= load($ttf);
+is-deeply $vhea, Font::TTF::VertHeader;
 
 my Font::TTF::OS2 $os2 .= load($ttf);
 is $os2.version, 1;
@@ -66,7 +68,7 @@ is $pclt.capHeight, 1493;
 is $pclt.strokeWeight, 0;
 is $pclt.serifStyle, 64;
 
-my Font::TTF::Post $post .= load($ttf);
+my Font::TTF::Postscript $post .= load($ttf);
 is $post.format, 2;
 is $post.italicAngle, 0;
 is $post.underlinePosition, -213;
@@ -76,7 +78,7 @@ is $post.maxMemType42, 0;
 is $post.minMemType1, 0;
 is $post.maxMemType1, 0;
 
-my Font::TTF::Maxp $maxp .= load($ttf);
+my Font::TTF::MaxProfile $maxp .= load($ttf);
 is $maxp.version, 1;
 is $maxp.numGlyphs, 268;
 is $maxp.maxPoints, 77;
