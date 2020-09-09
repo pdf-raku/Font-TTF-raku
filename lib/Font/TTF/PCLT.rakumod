@@ -9,26 +9,27 @@ class Font::TTF::PCLT is repr('CStruct') does Sfnt-Struct does Sfnt-Table['PCLT'
     has uFWord   $.typeFamily;
     has uFWord   $.capHeight;
     has uFWord   $.symbolSet;
-    # todo
-    my class TypeFace is repr('CStruct') {
+
+    my class TypeFace is repr('CStruct')  does Sfnt-Struct {
         has uint8 ($!b1, $!b2, $!b3, $!b4, $!b5,
                      $!b6, $!b7, $!b8, $!b9, $!b10,
                      $!b11, $!b12, $!b13, $!b14, $!b15, $!b16
-                    );
+                  );
+        method Str handles<gist> {
+            self.pack.grep(* > 0).map(*.chr).join;
+        }
     }
-    HAS TypeFace $!typeface;
-    # todo
-    my class CharComp is repr('CStruct') {
-        has uint8 ($!b1, $!b2, $!b3, $!b4, $!b5,
-                     $!b6, $!b7, $!b8
-                    );
-    }
-    HAS CharComp $!characterComplement;
-    # todo
-    my class FileName is repr('CStruct') {
+    HAS TypeFace $.typeface;
+
+    has uint64 $.characterComplement;
+
+    my class FileName is repr('CStruct') does Sfnt-Struct {
         has uint8 ($!b1, $!b2, $!b3, $!b4, $!b5, $!b6);
+        method Str handles<gist> {
+            self.pack.grep(* > 0).map(*.chr).join;
+        }
     }
-    HAS FileName $!fileName;
+    HAS FileName $.fileName;
     has int8     $.strokeWeight;
     has int8     $.widthType;
     has uint8    $.serifStyle;

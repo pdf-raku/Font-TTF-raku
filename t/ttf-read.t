@@ -10,7 +10,7 @@ use Font::TTF::PCLT;
 use Font::TTF::Postscript;
 use Font::TTF::VertHeader;
 use NativeCall;
-plan 72;
+plan 75;
 
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
@@ -60,6 +60,7 @@ is $os2.ySubscriptXSize, 1351;
 is $os2.ySubscriptYSize, 1228;
 is $os2.achVendID, "Bits";
 is $os2.panose.bSerifStyle, 11;
+is-deeply $os2.panose.Blob, Buf[uint8].new(2,11,6,3,3,8,4,2,2,4);
 
 my Font::TTF::PCLT $pclt .= load($ttf);
 
@@ -69,6 +70,8 @@ is $pclt.xHeight, 1120;
 is $pclt.capHeight, 1493;
 is $pclt.strokeWeight, 0;
 is $pclt.serifStyle, 64;
+is $pclt.typeface, 'VeraSans';
+is $pclt.fileName, '628R00';
 
 my Font::TTF::Postscript $post .= load($ttf);
 is $post.format, 2;
