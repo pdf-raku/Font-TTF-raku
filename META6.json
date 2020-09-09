@@ -6,8 +6,7 @@
   "build-depends": [
   ],
   "depends": [
-      "CStruct::Packing",
-      "Array::Agnostic"
+      "CStruct::Packing"
   ],
   "description": "Low level access to TrueType font files",
   "license": "Artistic-2.0",
@@ -16,6 +15,7 @@
   "provides": {
       "Font::TTF": "lib/Font/TTF.rakumod",
       "Font::TTF::Defs": "lib/Font/TTF/Defs.rakumod",
+      "Font::TTF::CMap": "lib/Font/TTF/CMap.rakumod",
       "Font::TTF::Header": "lib/Font/TTF/Header.rakumod",
       "Font::TTF::HoriHeader": "lib/Font/TTF/HoriHeader.rakumod",
       "Font::TTF::Locations": "lib/Font/TTF/Locations.rakumod",
