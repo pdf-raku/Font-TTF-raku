@@ -7,8 +7,6 @@ constant Sfnt-Struct is export(:Sfnt-Struct) = CStruct::Packing[NetworkEndian];
 role Sfnt-Table[Str $tag] is export(:Sfnt-Table) {
     method tag { $tag }
     method load($loader) { $loader.load(self.tag, :class(self.WHAT)) }
-    method read(|) {...}
-    method write(|) {...}
     method unpack(|) {...}
     method pack(|) {...}
 }

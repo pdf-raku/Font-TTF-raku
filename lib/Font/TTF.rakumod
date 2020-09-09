@@ -5,6 +5,7 @@ class Font::TTF {
     use Font::TTF::Defs :Sfnt-Struct, :Sfnt-Table;
     use Font::TTF::Header;
     use Font::TTF::HoriHeader;
+    use Font::TTF::Locations;
     use Font::TTF::MaxProfile;
     use Font::TTF::OS2;
     use Font::TTF::PCLT;
@@ -57,6 +58,7 @@ class Font::TTF {
     has %!position;
     has %!length;
     has Directory @!directories;
+    has Buf %!bufs;
     has %!tables = @Tables.map: { .tag => $_ };
 
     method tables {
@@ -91,16 +93,23 @@ class Font::TTF {
         %!length{.key} = .value with $prev;
     }
 
-    method load(Str $table, :$class where Sfnt-Table = %!tables{$table}) {
-        without %!tables{$table} {
-            with %!position{$table} -> $pos {
+    method read($tag) {
+        without %!bufs{$tag} {
+            with %!position{$tag} -> $pos {
                 $!fh.seek($pos, SeekFromBeginning);
-                my $size = .packed-size;
-                my $len = %!length{$table};
-                my $buf = $!fh.read($len);
-                $_ = $class.unpack($buf, :pad);
+                my $len = %!length{$tag};
+                $_ = $!fh.read($len);
             }
         }
-        %!tables{$table};
+        %!bufs{$tag}
+    }
+
+    method load(Str $tag, :$class = %!tables{$tag}) {
+        without %!tables{$tag} {
+            with self.read($tag) -> $buf {
+                $_ = $class.unpack($buf, :pad, :loader(self));
+            }
+        }
+        %!tables{$tag};
     }
 }

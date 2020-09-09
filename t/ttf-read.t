@@ -2,13 +2,14 @@ use Test;
 use Font::TTF;
 use Font::TTF::Header;
 use Font::TTF::HoriHeader;
+use Font::TTF::Locations;
 use Font::TTF::MaxProfile;
 use Font::TTF::OS2;
 use Font::TTF::PCLT;
 use Font::TTF::Postscript;
 use Font::TTF::VertHeader;
 use NativeCall;
-plan 64;
+plan 69;
 
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
@@ -94,5 +95,12 @@ is $maxp.maxStackElements, 1045;
 is $maxp.maxSizeOfInstructions, 1384;
 is $maxp.maxComponentElements, 3;
 is $maxp.maxComponentDepth, 1;
+
+my Font::TTF::Locations $locs .= load($ttf);
+is $locs.elems, $locs.num-glyphs+1;
+is $locs[0].byte, 0;
+is $locs[1].byte, 68;
+is $locs[5].byte, 176;
+is $locs[268].byte, 35454;
 
 done-testing;
