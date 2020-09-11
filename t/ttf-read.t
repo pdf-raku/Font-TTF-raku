@@ -10,7 +10,7 @@ use Font::TTF::PCLT;
 use Font::TTF::Postscript;
 use Font::TTF::VertHeader;
 use NativeCall;
-plan 75;
+plan 77;
 
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
@@ -109,7 +109,11 @@ is $locs[268].byte, 35454;
 
 my Font::TTF::CMap $cmap .= load($ttf);
 is $cmap.elems, 2;
+
 is $cmap[0].platformID, 1;
+is $cmap[0].subbuf.bytes, 262;
+
 is $cmap[1].platformID, 3;
+is $cmap[1].subbuf.bytes, 574;
 
 done-testing;
