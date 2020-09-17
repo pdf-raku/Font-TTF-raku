@@ -2,7 +2,7 @@ use Test;
 use Font::TTF;
 use Font::TTF::Table::CMap;
 use Font::TTF::Table::Header;
-use Font::TTF::Table::Locations;
+use Font::TTF::Table::GlyphIndex;
 use Font::TTF::Table::MaxProfile;
 use Font::TTF::Subset::Raw;
 use File::Temp;
@@ -63,7 +63,7 @@ is $maxp.maxSizeOfInstructions, 1384;
 is $maxp.maxComponentElements, 3;
 is $maxp.maxComponentDepth, 1;
 
-my Font::TTF::Table::Locations $locs .= load($ttf);
+my Font::TTF::Table::GlyphIndex $locs .= load($ttf);
 is $locs.elems, $locs.num-glyphs+1;
 is $locs[0], 0;
 is $locs[1], 68;

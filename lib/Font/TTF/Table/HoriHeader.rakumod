@@ -19,5 +19,5 @@ class Font::TTF::Table::HoriHeader
     has FWord	$.caretOffset;	# set value to 0 for non-slanted fonts
     has int16	($!reserved, $!r2, $!r3, $!r4);	# set value to 0
     has int16	$.metricDataFormat;	# 0 for current format
-    has uint16	$.numOfLongHorMetrics;	# number of advance widths in metrics table
+    has uint16	$.numOfLongHorMetrics is rw;	# number of advance widths in metrics table
 }

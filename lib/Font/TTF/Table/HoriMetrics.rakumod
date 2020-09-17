@@ -5,41 +5,81 @@ class Font::TTF::Table::HoriMetrics
 
     use Font::TTF::Defs :Sfnt-Struct;
     use Font::TTF::Table::HoriHeader;
+    use Font::TTF::Table::MaxProfile;
+    use Font::TTF::Subset;
     use CStruct::Packing :&mem-unpack, :&mem-pack;
     use NativeCall;
     
-    method tag {'loca'}
+    method tag {'hmtx'}
 
-    has UInt $.num-glyphs is rw;
+    has UInt $!num-glyphs is rw;
+    has UInt $.num-long-metrics is rw;
     method elems { $!num-glyphs + 1}
 
-    has CArray $.offsets;
-    has UInt $!scale;
+    has buf8 $!buf;
 
-    method AT-POS(Int() $idx where 0 <= * <= $!num-glyphs) {
-        $!offsets[$idx] * $!scale;
+    class longHoriMetric is repr('CStruct') does Sfnt-Struct {
+        has uint16 $.advanceWidth;
+        has uint16 $.leftSideBearing;
+    }
+
+    class shortHoriMetric is repr('CStruct') does Sfnt-Struct {
+        has uint16 $.leftSideBearing;
+    }
+
+    multi method AT-POS(Int() $gid where 0 <= * <= $!num-long-metrics) {
+        my $offset := 4 * $gid;
+        longHoriMetric.unpack($!buf, :$offset);
+    }
+
+    multi method AT-POS(Int() $gid where 0 <= * <= $!num-glyphs) {
+        my $offset := 2 * $!num-long-metrics + 2 * $gid;
+        shortHoriMetric.unpack($!buf, :$offset);
     }
 
     constant HoriHeader = Font::TTF::Table::HoriHeader;
+    constant MaxProfile = Font::TTF::Table::MaxProfile;
 
     submethod TWEAK(
         :$loader,
-        HoriHeader:D :$hhea     = HoriHeader.load($loader),
-        Buf :$buf           = $loader.buf(self.tag),
+        HoriHeader:D :$hhea = HoriHeader.load($loader),
+        MaxProfile:D :$maxp = MaxProfile.load($loader),
+        :$!buf              = $loader.buf(self.tag),
     ) {
 
         $!num-glyphs = $maxp.numGlyphs;
-        my $is-long := ? $head.indexToLocFormat;
-
-        my CArray $class = $is-long
-            ?? CArray[uint32]
-            !! CArray[uint16];
-
-        $!offsets = mem-unpack($class, $buf, :n($!num-glyphs+1), :endian(NetworkEndian));
-        $!scale = $is-long ?? 1 !! 2;
+        $!num-long-metrics = $hhea.numOfLongHorMetrics;
         self;
     }
-    method pack(buf8 $buf) {
-        mem-pack($!offsets, :n($!num-glyphs+1), :endian(NetworkEndian));
+    method pack(buf8 $buf is rw) {
+        $buf = $!buf;
+    }
+    method subset(Font::TTF::Subset $subset) {
+        # todo: rewrite in C
+        my $ss-num-glyphs = $subset.len;
+        my $ss-num-long-metrics = 0;
+        my $gid-map := $subset.gids;
+
+        for 0 ..^ $ss-num-glyphs -> $ss-gid {
+            my $gid = $gid-map[$ss-gid];
+            if $gid <= $!num-long-metrics {
+                # repack short metric
+                my $from-offset := 2 * $!num-long-metrics + 2 * $gid;
+                my $to-offset := 2 * $ss-num-long-metrics++ + 2 * $ss-gid;
+                $!buf.subbuf-rw($to-offset, 2) = $!buf.subbuf($from-offset, 2)
+                    unless $from-offset == $to-offset;
+            }
+            else {
+                # repack long metric
+                my $from-offset := 4 * $gid;
+                my $to-offset := 4 * $ss-gid;
+                $!buf.subbuf-rw($to-offset, 4) = $!buf.subbuf($from-offset, 4)
+                    unless $from-offset == $to-offset;
+            }
+        }
+        $!num-glyphs = $ss-num-glyphs;
+        $!num-long-metrics = $ss-num-long-metrics;
+        $!buf.reallocate($!num-glyphs * 2  +  $!num-long-metrics * 2);
+        self;
     }
 }

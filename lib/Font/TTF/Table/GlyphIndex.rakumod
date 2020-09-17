@@ -1,6 +1,6 @@
 use Font::TTF::Table::Generic;
 
-class Font::TTF::Table::Locations
+class Font::TTF::Table::GlyphIndex
     is Font::TTF::Table::Generic {
 
     use Font::TTF::Defs :Sfnt-Struct;

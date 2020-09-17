@@ -1,10 +1,11 @@
 use Test;
-plan 53;
+plan 61;
 use Font::TTF;
 use Font::TTF::Table::CMap;
 use Font::TTF::Table::Header;
 use Font::TTF::Table::HoriHeader;
-use Font::TTF::Table::Locations;
+use Font::TTF::Table::HoriMetrics;
+use Font::TTF::Table::GlyphIndex;
 use Font::TTF::Table::MaxProfile;
 use Font::TTF::Table::VertHeader;
 use NativeCall;
@@ -62,10 +63,23 @@ is $hhea.xMaxExtent, 2636;
 is $hhea.caretSlopeRise, 1;
 is $hhea.numOfLongHorMetrics, 268;
 
+my Font::TTF::Table::HoriMetrics $hmtx .= load($ttf);
+is $hmtx.elems, 269;
+is $hmtx.num-long-metrics, 268;
+constant notdef = 0;
+is $hmtx[notdef].advanceWidth, 1229;
+is $hmtx[notdef].leftSideBearing, 102;
+constant null = 1;
+is $hmtx[null].advanceWidth, 0;
+is $hmtx[null].leftSideBearing, 0;
+constant space = 2;
+is $hmtx[space].advanceWidth, 651;
+is $hmtx[space].leftSideBearing, 0;
+
 my Font::TTF::Table::VertHeader $vhea .= load($ttf);
 is-deeply $vhea, Font::TTF::Table::VertHeader;
 
-my Font::TTF::Table::Locations $locs .= load($ttf);
+my Font::TTF::Table::GlyphIndex $locs .= load($ttf);
 is $locs.elems, $locs.num-glyphs+1;
 is $locs[0], 0;
 is $locs[1], 68;

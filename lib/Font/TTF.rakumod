@@ -8,8 +8,9 @@ use Font::TTF::Table;
 use Font::TTF::Table::CMap;
 use Font::TTF::Table::Header;
 use Font::TTF::Table::HoriHeader;
+use Font::TTF::Table::HoriMetrics;
 use Font::TTF::Table::VertHeader;
-use Font::TTF::Table::Locations;
+use Font::TTF::Table::GlyphIndex;
 use Font::TTF::Table::OS2;
 use Font::TTF::Table::PCLT;
 use Font::TTF::Table::MaxProfile;
@@ -59,8 +60,10 @@ has Offsets $!offsets handles<numTables>;
 has UInt %!tag-idx;
 
 our @Tables = [
-    Font::TTF::Table::CMap, Font::TTF::Table::Header, Font::TTF::Table::HoriHeader,
-    Font::TTF::Table::Locations, Font::TTF::Table::MaxProfile, Font::TTF::Table::VertHeader,
+    Font::TTF::Table::CMap, Font::TTF::Table::Header,
+    Font::TTF::Table::HoriHeader, Font::TTF::Table::HoriMetrics,
+    Font::TTF::Table::GlyphIndex, Font::TTF::Table::MaxProfile,
+    Font::TTF::Table::VertHeader,
     Font::TTF::Table::PCLT, Font::TTF::Table::OS2,
 ];
 has %!tables = @Tables.map: { .tag => $_ };
@@ -122,37 +125,37 @@ method buf(Str $tag) {
 }
 
 #| add or update a table buffer
-multi method update-buffer(Blob $buf, Str:D :$tag!) {
+multi method upd(Blob $buf, Str:D :$tag!) {
     %!tables{$tag}:delete; # invalidate object
     my $idx = (%!tag-idx{$tag} //= +%!tag-idx);
     @!bufs[$idx] = $buf;
 }
 
 #| add or update a table object
-multi method update-object(Font::TTF::Table $obj) {
+multi method upd(Font::TTF::Table $obj) {
     my $tag = $obj.tag;
     my $idx = (%!tag-idx{$tag} //= +%!tag-idx);
     @!bufs[$idx] = Nil;  # invalidate buffer
     %!tables{$tag} = $obj;
 }
 
-method load(Str $tag) {
-
-    my $obj = %!tables{$tag}:exists
+multi method load(Str $tag) {
+    self.load: %!tables{$tag}:exists
         ?? %!tables{$tag}
         !! Font::TTF::Table::Generic;
+}
 
-    with $obj {
-        $_;
-    }
-    elsif %!tag-idx{$tag}:exists {
-        given self.buf($tag) -> Blob $buf {
-            $obj .= new: :$buf, :$tag, :loader(self);
-            %!tables{$tag} = $obj;
-        }
-    }
+multi method load(Font::TTF::Table:D $obj) {
+    $obj
+}
 
-    $obj;
+multi method load(Font::TTF::Table:U $class) {
+    my $tag = $class.tag;
+    my $rv = $class;
+    with self.buf($tag) -> Blob $buf {
+        $rv .= new: :$buf, :$tag, :loader(self);
+    }
+    $rv;
 }
 
 constant Alignment = nativesizeof(long);
@@ -176,21 +179,43 @@ multi sub byte-align(buf8 $buf) {
     $buf;
 }
 
+# rebuild the glyphs index ('loca') and the glyphs buffer ('glyf')
+method !subset-glyph-tables(Font::TTF::Subset $subset) {
+
+    my Font::TTF::Table::GlyphIndex:D $index .= load(self);
+    my buf8 $glyphs-buf = self.buf('glyf');
+
+    my $bytes = $subset.raw.subset-glyphs($index.offsets, $glyphs-buf);
+
+    $glyphs-buf.reallocate($bytes);
+    $index.num-glyphs = $subset.len;
+
+    self.upd($index);
+    self.upd($glyphs-buf, :tag<glyf>)
+}
+
+# rebuild horizontal metrics
+method !subset-hori-tables(Font::TTF::Subset $subset) {
+    with self.load(Font::TTF::Table::HoriHeader) -> $hhea {
+        with self.load(Font::TTF::Table::HoriMetrics) -> $hmtx {
+            $hmtx.subset($subset);
+            self.upd($hmtx);
+            $hhea.numOfLongHorMetrics = $hmtx.num-long-metrics;
+            self.upd($hhea);
+        }
+    }
+}
+
 method subset(Font::TTF::Subset $subset) {
     my Font::TTF::Table::Header:D $head .= load(self);
     my Font::TTF::Table::MaxProfile:D $maxp .= load(self);
-    my Font::TTF::Table::Locations:D $loca .= load(self);
-    my buf8 $glyphs-buf = self.buf('glyf');
+
+    self!subset-glyph-tables($subset);
+    self!subset-hori-tables($subset);
 
     my $num-glyphs := $subset.len;
-    $maxp.numGlyphs = $num-glyphs;
-    my $bytes = $subset.raw.repack-glyphs($loca.offsets, $glyphs-buf);
-    $glyphs-buf.reallocate($bytes);
-    $loca.num-glyphs = $num-glyphs;
+    self.upd($maxp).numGlyphs = $num-glyphs;
 
-    self.update-object($maxp);
-    self.update-object($loca);
-    self.update-buffer($glyphs-buf, :tag<glyf>);
 }
 
 method !rebuild returns Blob {

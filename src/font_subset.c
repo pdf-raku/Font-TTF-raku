@@ -17,10 +17,16 @@ font_subset_create(FT_Face font, FT_ULong *charset, size_t len) {
     fontSubsetPtr self = (fontSubsetPtr)malloc(sizeof(struct _fontSubset));
     self->font = font;
     self->len = 0;
-    self->charset = calloc(len + 1, sizeof(FT_ULong));
-    self->gids = calloc(len + 1, sizeof(FT_UInt));
+    self->charset = calloc(len + 2, sizeof(FT_ULong));
+    self->gids = calloc(len + 2, sizeof(FT_UInt));
     self->fail = NULL;
-    for (i = 0; i < len; i++) {
+
+    // add .notdef
+    self->gids[0] = 0;
+    self->charset[0] = 0;
+    self->len++;
+
+    for (i = 0; i <= len; i++) {
         FT_ULong code = charset[i];
         FT_UInt gid;
         if (i && code <= charset[i-1]) {
@@ -34,8 +40,10 @@ font_subset_create(FT_Face font, FT_ULong *charset, size_t len) {
             self->len++;
         }
     }
+
     self->gids[self->len] = 0;
     self->charset[self->len] = 0;
+
     return self;
 }
 
