@@ -1,19 +1,32 @@
 use Test;
-plan 53;
 use Font::TTF;
 use Font::TTF::Table::CMap;
 use Font::TTF::Table::Header;
-use Font::TTF::Table::HoriHeader;
 use Font::TTF::Table::Locations;
 use Font::TTF::Table::MaxProfile;
-use Font::TTF::Table::VertHeader;
-use NativeCall;
+use Font::TTF::Subset::Raw;
+use File::Temp;
+plan 44;
 
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
 my Font::TTF:D $ttf .= new: :$fh;
+my $maxp-checksum-in = $ttf.directories.first(*.tag eq 'maxp').checkSum;
+my $maxp-buf = $ttf.buf('maxp');
+is font_subset_sfnt_checksum($maxp-buf, $maxp-buf.bytes), $maxp-checksum-in;
+
+(my $filename, $fh) = tempfile;
+$fh.write: $ttf.Blob;
+$fh.close;
+
+# read-read the file
+$fh = $filename.IO.open(:r, :bin);
+$ttf .= new: :$fh;
 
 is $ttf.numTables, 17;
+my $maxp-checksum-out = $ttf.directories.first(*.tag eq 'maxp').checkSum;
+
+is $maxp-checksum-out, $maxp-checksum-in;
 
 my Font::TTF::Table::Header $head .= load($ttf);
 
@@ -49,21 +62,6 @@ is $maxp.maxStackElements, 1045;
 is $maxp.maxSizeOfInstructions, 1384;
 is $maxp.maxComponentElements, 3;
 is $maxp.maxComponentDepth, 1;
-
-my Font::TTF::Table::HoriHeader $hhea .= load($ttf);
-is $hhea.version, 1;
-is $hhea.ascent, 1901;
-is $hhea.descent, -483;
-is $hhea.lineGap, 0;
-is $hhea.advanceWidthMax, 2748;
-is $hhea.minLeftSideBearing, -375;
-is $hhea.minRightSideBearing, -375;
-is $hhea.xMaxExtent, 2636;
-is $hhea.caretSlopeRise, 1;
-is $hhea.numOfLongHorMetrics, 268;
-
-my Font::TTF::Table::VertHeader $vhea .= load($ttf);
-is-deeply $vhea, Font::TTF::Table::VertHeader;
 
 my Font::TTF::Table::Locations $locs .= load($ttf);
 is $locs.elems, $locs.num-glyphs+1;

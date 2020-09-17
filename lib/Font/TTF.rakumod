@@ -1,116 +1,246 @@
-class Font::TTF {
+unit class Font::TTF;
 
-    use CStruct::Packing :Endian;
-    use Font::TTF::Util;
-    use Font::TTF::Defs :Sfnt-Struct, :Sfnt-Table;
-    use Font::TTF::CMap;
-    use Font::TTF::Header;
-    use Font::TTF::HoriHeader;
-    use Font::TTF::Locations;
-    use Font::TTF::MaxProfile;
-    use Font::TTF::OS2;
-    use Font::TTF::PCLT;
-    use Font::TTF::Postscript;
-    use Font::TTF::VertHeader;
-    use NativeCall;
+use CStruct::Packing :Endian;
+use Font::TTF::Defs :Sfnt-Struct;
+use Font::TTF::Subset;
+use Font::TTF::Subset::Raw;
+use Font::TTF::Table;
+use Font::TTF::Table::CMap;
+use Font::TTF::Table::Header;
+use Font::TTF::Table::HoriHeader;
+use Font::TTF::Table::VertHeader;
+use Font::TTF::Table::Locations;
+use Font::TTF::Table::OS2;
+use Font::TTF::Table::PCLT;
+use Font::TTF::Table::MaxProfile;
+use Font::TTF::Table::Generic;
+use NativeCall;
 
-    our @Tables = [
-        Font::TTF::CMap, Font::TTF::Header, Font::TTF::HoriHeader, Font::TTF::MaxProfile,
-        Font::TTF::OS2, Font::TTF::Postscript, Font::TTF::PCLT, Font::TTF::VertHeader];
+class Offsets is repr('CStruct') does Sfnt-Struct {
+    has uint32  $.ver;
+    has uint16  $.numTables;
+    has uint16  $.searchRange;
+    has uint16  $.entrySelector;
+    has uint16  $.rangeShift;
+}
 
-    class Offsets is repr('CStruct') does Sfnt-Struct {
-        has uint32  $.ver;
-        has uint16  $.numTables;
-        has uint16  $.searchRange;
-        has uint16  $.entrySelector;
-        has uint16  $.rangeShift;
+class Directory is repr('CStruct') does Sfnt-Struct {
+    has uint32	$.tag; 	        # 4-byte identifier
+    has uint32	$.checkSum;	# checksum for this table
+    has uint32	$.offset;	# offset from beginning of sfnt
+    has uint32	$.length;	# length of this table in byte (actual length not padded length)
+
+    sub tag-decode(UInt:D $tag is copy) is export(:tag-decode) {
+        my @chrs = (1..4).map: {
+            my $chr = ($tag mod 256).chr;
+            $tag div= 256;
+            $chr;
+        }
+        @chrs.reverse.join.trim;
     }
 
-    class Directory is repr('CStruct') does Sfnt-Struct {
-        has uint32	$.tag; 	        # 4-byte identifier
-        sub tag-decode(UInt:D $tag is copy) is export(:tag-decode) {
-            my @chrs = (1..4).map: {
-                my $chr = ($tag mod 256).chr;
-                $tag div= 256;
-                $chr;
-            }
-            @chrs.reverse.join;
+    sub tag-encode(Str:D $s --> UInt) is export {
+        my uint32 $enc = 0;
+        for $s.ords {
+            $enc *= 256;
+            $enc += $_;
         }
-
-        sub tag-encode(Str:D $s --> UInt) is export {
-            my uint32 $enc = 0;
-            for $s.ords {
-                $enc *= 256;
-                $enc += $_;
-            }
-            $enc;
-        }
-
-        method tag {
-            tag-decode($!tag);
-        }
-
-        has uint32	$.checkSum;	# checksum for this table
-        has uint32	$.offset;	# offset from beginning of sfnt
-        has uint32	$.length;	# length of this table in byte (actual length not padded length)
-    }
-    has IO::Handle $!fh;
-    has Offsets $!offsets handles<numTables>;
-    has %!position;
-    has %!length;
-    has Directory @!directories;
-    has Buf %!bufs;
-    has %!tables = @Tables.map: { .tag => $_ };
-
-    method tables {
-        %!position.sort(*.value).map(*.key);
-    }
-        
-    multi method open(Font::TTF:U: |c) {
-        self.new.open(|c);
-    }
-    multi method open(Font::TTF:D: $!fh) {
-        $!offsets .= read($!fh);
-        die "can't handle this format" unless $!offsets.ver == 65536;
-
-        for 1 .. $!offsets.numTables {
-            my Directory $dir .= read($!fh);
-            %!position{$dir.tag} = $dir.offset;
-            @!directories.push: $dir;
-        }
-
-        self!setup-lengths();
-        self;
+        $enc ~= ' ' while $enc.chars < 4;
+        $enc;
     }
 
-    method !setup-lengths {
-        my $prev;
-        for %!position.pairs.sort(*.value) {
-            if $prev.defined {
-                %!length{$prev.key} = .value - $prev.value;
-            }
-            $prev = $_;
-        }
-        %!length{.key} = .value with $prev;
-    }
-
-    method read($tag) {
-        without %!bufs{$tag} {
-            with %!position{$tag} -> $pos {
-                $!fh.seek($pos, SeekFromBeginning);
-                my $len = %!length{$tag};
-                $_ = $!fh.read($len);
-            }
-        }
-        %!bufs{$tag}
-    }
-
-    method load(Str $tag, :$class = %!tables{$tag}) {
-        without %!tables{$tag} {
-            with self.read($tag) -> $buf {
-                $_ = $class.unpack($buf, :pad, :loader(self));
-            }
-        }
-        %!tables{$tag};
+    method tag-encoded { $!tag }
+    method tag {
+        tag-decode($!tag);
     }
 }
+has IO::Handle:D $.fh is required;
+has Offsets $!offsets handles<numTables>;
+has UInt %!tag-idx;
+
+our @Tables = [
+    Font::TTF::Table::CMap, Font::TTF::Table::Header, Font::TTF::Table::HoriHeader,
+    Font::TTF::Table::Locations, Font::TTF::Table::MaxProfile, Font::TTF::Table::VertHeader,
+    Font::TTF::Table::PCLT, Font::TTF::Table::OS2,
+];
+has %!tables = @Tables.map: { .tag => $_ };
+has Directory @.directories;
+has UInt @.lengths;
+has Buf @.bufs;
+has Set $.rebuilt = set <
+    maxp hdmx htmx cmap loca glyf name kern
+>;
+
+method tags {
+    @!directories.grep(*.defined)>>.tag;
+}
+
+submethod TWEAK {
+    $!offsets .= read($!fh);
+    for 0 ..^ $!offsets.numTables {
+        my Directory $dir .= read($!fh);
+        %!tag-idx{$dir.tag} = $_;
+        @!directories.push: $dir;
+    }
+
+    self!setup-lengths();
+    self;
+}
+
+method !setup-lengths {
+    my $prev;
+    for @!directories.sort(*.offset) -> $dir {
+        with $prev {
+            my $offset = $dir.offset;
+            my $idx = %!tag-idx{$prev.tag};
+            @!lengths[$idx] = $offset - $prev.offset;
+        }
+        $prev = $dir;
+    }
+}
+
+method buf(Str $tag) {
+    with %!tag-idx{$tag} -> $idx {
+        @!bufs[$idx] //= do with %!tables{$tag} {
+            .pack;
+        } // do {
+            given @!directories[$idx] {
+                my $offset = .offset;
+                $!fh.seek($offset, SeekFromBeginning);
+                with @!lengths[$idx] {
+                    $!fh.read($_);
+                }
+                else {
+                    $!fh.slurp-rest(:bin);
+                }
+            }
+        }
+    }
+    else {
+        buf8;
+    }
+}
+
+#| add or update a table buffer
+multi method update-buffer(Blob $buf, Str:D :$tag!) {
+    %!tables{$tag}:delete; # invalidate object
+    my $idx = (%!tag-idx{$tag} //= +%!tag-idx);
+    @!bufs[$idx] = $buf;
+}
+
+#| add or update a table object
+multi method update-object(Font::TTF::Table $obj) {
+    my $tag = $obj.tag;
+    my $idx = (%!tag-idx{$tag} //= +%!tag-idx);
+    @!bufs[$idx] = Nil;  # invalidate buffer
+    %!tables{$tag} = $obj;
+}
+
+method load(Str $tag) {
+
+    my $obj = %!tables{$tag}:exists
+        ?? %!tables{$tag}
+        !! Font::TTF::Table::Generic;
+
+    with $obj {
+        $_;
+    }
+    elsif %!tag-idx{$tag}:exists {
+        given self.buf($tag) -> Blob $buf {
+            $obj .= new: :$buf, :$tag, :loader(self);
+            %!tables{$tag} = $obj;
+        }
+    }
+
+    $obj;
+}
+
+constant Alignment = nativesizeof(long);
+
+multi sub byte-align(UInt $bytes is rw) {
+    if $bytes %% Alignment {
+        $bytes;
+    }
+    else {
+        my \padding = Alignment - $bytes % Alignment;
+        $bytes += padding;
+    }
+}
+
+multi sub byte-align(buf8 $buf) {
+    my $bytes := $buf.bytes;
+    unless $bytes %% Alignment {
+        my \padding = Alignment - $bytes % Alignment;
+        $buf.append: 0 xx padding;
+    }
+    $buf;
+}
+
+method subset(Font::TTF::Subset $subset) {
+    my Font::TTF::Table::Header:D $head .= load(self);
+    my Font::TTF::Table::MaxProfile:D $maxp .= load(self);
+    my Font::TTF::Table::Locations:D $loca .= load(self);
+    my buf8 $glyphs-buf = self.buf('glyf');
+
+    my $num-glyphs := $subset.len;
+    $maxp.numGlyphs = $num-glyphs;
+    my $bytes = $subset.raw.repack-glyphs($loca.offsets, $glyphs-buf);
+    $glyphs-buf.reallocate($bytes);
+    $loca.num-glyphs = $num-glyphs;
+
+    self.update-object($maxp);
+    self.update-object($loca);
+    self.update-buffer($glyphs-buf, :tag<glyf>);
+}
+
+method !rebuild returns Blob {
+    # copy or rebuild tables. Preserve input order\
+    my class ManifestItem {
+        has Directory:D $.dir-in is required;
+        has Blob:D $.buf is required;
+        has Directory $.dir-out is rw;
+    }
+    my ManifestItem @manifest;
+
+    for @!directories -> $dir-in {
+        my $tag := $dir-in.tag;
+        given self.buf($tag) -> $buf {
+            @manifest.push: ManifestItem.new: :$dir-in, :$buf;
+        }
+    }
+
+    @manifest .= sort(*.dir-in.tag);
+
+    my uint16 $numTables = +@manifest;
+    # todo: recalc properties. copy for now
+    my uint16  $searchRange = $!offsets.searchRange;
+    my uint16  $entrySelector = $!offsets.entrySelector;
+    my uint16  $rangeShift = $!offsets.rangeShift;
+    my uint32  $ver = $!offsets.ver;
+    my Offsets $offsets .= new: :$numTables, :$ver, :$searchRange, :$entrySelector, :$rangeShift;
+    my $buf = $offsets.pack;
+    my $offset = Offsets.packed-size + $numTables * Directory.packed-size;
+    for @manifest {
+        my $dir = .dir-in;
+        my $tag-str = $dir.tag;
+        my uint32 $tag = $dir.tag-encoded;
+        my uint32 $checkSum = font_subset_sfnt_checksum(.buf, .buf.bytes);
+        my $subbuf = $dir.pack;
+        my uint32 $length = $dir.length;
+        .dir-out = Directory.new: :$offset, :$tag, :$tag-str, :$length, :$checkSum;
+        $buf.append: .dir-out.pack;
+        $offset += $length;
+        byte-align($offset);
+    }
+    for @manifest {
+        $buf.append: .buf;
+        byte-align($buf);
+    }
+    $buf;
+}
+
+#| rebuilt the Sfnt Image
+method Blob {
+    self!rebuild;
+}
+

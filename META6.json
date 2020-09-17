@@ -1,34 +1,41 @@
 {
+  "api": "PDF-1.7",
   "auth": "github:pdf-raku",
   "authors": [
     "David Warring"
   ],
   "build-depends": [
   ],
-  "depends": [
-      "CStruct::Packing"
+    "depends": [
+      "CStruct::Packing",
+      "Font::FreeType",
+      "File::Temp"
   ],
-  "description": "Low level access to TrueType font files",
+  "description": "Font manipulation and subsetting API",
   "license": "Artistic-2.0",
   "name": "Font::TTF",
   "perl": "6.*",
   "provides": {
       "Font::TTF": "lib/Font/TTF.rakumod",
       "Font::TTF::Defs": "lib/Font/TTF/Defs.rakumod",
-      "Font::TTF::CMap": "lib/Font/TTF/CMap.rakumod",
-      "Font::TTF::Header": "lib/Font/TTF/Header.rakumod",
-      "Font::TTF::HoriHeader": "lib/Font/TTF/HoriHeader.rakumod",
-      "Font::TTF::Locations": "lib/Font/TTF/Locations.rakumod",
-      "Font::TTF::MaxProfile": "lib/Font/TTF/MaxProfile.rakumod",
-      "Font::TTF::OS2" : "lib/Font/TTF/OS2.rakumod",
-      "Font::TTF::PCLT": "lib/Font/TTF/PCLT.rakumod",
-      "Font::TTF::Postscript": "lib/Font/TTF/Postscript.rakumod",
-      "Font::TTF::VertHeader": "lib/Font/TTF/VertHeader.rakumod",
-      "Font::TTF::Util": "lib/Font/TTF/Util.rakumod"
+      "Font::TTF::Table": "lib/Font/TTF/Table.rakumod",
+      "Font::TTF::Table::CMap": "lib/Font/TTF/Table/CMap.rakumod",
+      "Font::TTF::Table::Generic": "lib/Font/TTF/Table/Generic.rakumod",
+      "Font::TTF::Table::Header": "lib/Font/TTF/Table/Header.rakumod",
+      "Font::TTF::Table::HoriHeader": "lib/Font/TTF/Table/HoriHeader.rakumod",
+      "Font::TTF::Table::Locations": "lib/Font/TTF/Table/Locations.rakumod",
+      "Font::TTF::Table::MaxProfile": "lib/Font/TTF/Table/MaxProfile.rakumod",
+      "Font::TTF::Table::OS2": "lib/Font/TTF/Table/OS2.rakumod",
+      "Font::TTF::Table::PCLT": "lib/Font/TTF/Table/PCLT.rakumod",
+      "Font::TTF::Table::VertHeader": "lib/Font/TTF/Table/VertHeader.rakumod",
+      "Font::TTF::Subset": "lib/Font/TTF/Subset.rakumod",
+      "Font::TTF::Subset::Raw": "lib/Font/TTF/Subset/Raw.rakumod",
+      "Font::TTF::Subset::Raw::Defs": "lib/Font/TTF/Subset/Raw/Defs.rakumod"
   },
   "resources": [
+    "libraries/font-subset"
   ],
-  "source-url": "git://github.com/pdf-raku/PDF-Font-TTF-raku.git",
+  "source-url": "git://github.com/pdf-raku/Font-TTF-raku.git",
   "tags": [
     "pdf",
     "font"
