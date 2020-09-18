@@ -2,34 +2,27 @@ use Test;
 plan 19;
 use Font::TTF::Subset;
 use Font::TTF;
-use Font::FreeType;
-use Font::FreeType::Face;
 use NativeCall;
 
 constant @charset = "Hello, world".ords.unique.sort;
 enum SubsetGids <notdef space comma H d e l o r w>;
 
-my Font::FreeType $freetype .= new;
-my Font::FreeType::Face $face = $freetype.face('t/fonts/DejaVuSans.ttf');
-
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
-my Font::TTF:D $ttf .= new: :$fh;
-my Font::TTF::Subset $subset .= new: :$face, :@charset;
+my Font::TTF::Subset $subset .= new: :$fh, :@charset;
+my Font::TTF:D $ttf = $subset.apply;
 
-$ttf.subset($subset);
-
-my $maxp = $ttf.load('maxp');
+my $maxp = $ttf.maxp;
 is $maxp.numGlyphs, 10;
 
-my $loca = $ttf.load('loca');
+my $loca = $ttf.loca;
 is $loca.elems, 11;
 is $loca[10], 1482;
 
-my $hhea = $ttf.load('hhea');
+my $hhea = $ttf.hhea;
 is $hhea.numOfLongHorMetrics, 10;
 
-my $hmtx = $ttf.load('hmtx');
+my $hmtx = $ttf.hmtx;
 is $hmtx.elems, 11;
 is $hmtx.num-long-metrics, 10;
 

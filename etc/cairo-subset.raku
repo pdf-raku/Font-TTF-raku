@@ -7,12 +7,20 @@ use Font::FreeType::Raw;
 
 my Font::FreeType $freetype .= new;
 
-# creates an embedded subset via Cairo for comparision with t/ttf-subset.t
-# - to then extract font:
-#   $ raku -e'use PDF::Reader; my PDF::Reader $r .= new.open: "etc/cairo-subset.pdf"; "etc/cairo-subset.ttf".IO.open(:w).write: $r.ind-obj(7, 0).object.decoded;'
-# - to inspect font
-#   pyftinspect etc/cairo-subset.ttf 
+=begin pod
 
+creates an embedded subset via Cairo for comparision with t/ttf-subset.t
+
+=item to then extract font:
+
+    use PDF::Reader;
+    my PDF::Reader $r .= new.open: "etc/cairo-subset.pdf";
+    etc/cairo-subset.ttf".IO.open(:w).write: $r.ind-obj(7, 0).object.decoded;'
+=item to inspect the font
+
+    $ pyftinspect etc/cairo-subset.ttf 
+
+=end pod
 
 given Cairo::Surface::PDF.create("etc/cairo-subset.pdf", 256, 256) {
     given Cairo::Context.new($_) {

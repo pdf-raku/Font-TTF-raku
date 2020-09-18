@@ -6,7 +6,6 @@ class Font::TTF::Table::HoriMetrics
     use Font::TTF::Defs :Sfnt-Struct;
     use Font::TTF::Table::HoriHeader;
     use Font::TTF::Table::MaxProfile;
-    use Font::TTF::Subset;
     use CStruct::Packing :&mem-unpack, :&mem-pack;
     use NativeCall;
     
@@ -53,34 +52,5 @@ class Font::TTF::Table::HoriMetrics
     }
     method pack(buf8 $buf is rw) {
         $buf = $!buf;
-    }
-    method subset(Font::TTF::Subset $subset) {
-        # todo: rewrite in C
-        my $ss-num-glyphs = $subset.len;
-        my $ss-num-long-metrics = 0;
-        my $gid-map := $subset.gids;
-
-        for 0 ..^ $ss-num-glyphs -> $ss-gid {
-            my $gid = $gid-map[$ss-gid];
-            if $gid >= $!num-long-metrics {
-                # repack short metric
-                my $from-offset := 2 * $!num-long-metrics + 2 * $gid;
-                my $to-offset := 2 * $ss-num-long-metrics + 2 * $ss-gid;
-                $!buf.subbuf-rw($to-offset, 2) = $!buf.subbuf($from-offset, 2)
-                    unless $from-offset == $to-offset;
-            }
-            else {
-                # repack long metric
-                my $from-offset := 4 * $gid;
-                my $to-offset := 4 * $ss-gid;
-                $ss-num-long-metrics++;
-                $!buf.subbuf-rw($to-offset, 4) = $!buf.subbuf($from-offset, 4)
-                    unless $from-offset == $to-offset;
-            }
-        }
-        $!num-glyphs = $ss-num-glyphs;
-        $!num-long-metrics = $ss-num-long-metrics;
-        $!buf.reallocate($!num-glyphs * 2  +  $!num-long-metrics * 2);
-        self;
     }
 }

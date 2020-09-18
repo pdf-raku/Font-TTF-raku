@@ -2,8 +2,6 @@ unit class Font::TTF;
 
 use CStruct::Packing :Endian;
 use Font::TTF::Defs :Sfnt-Struct;
-use Font::TTF::Subset;
-use Font::TTF::Subset::Raw;
 use Font::TTF::Table;
 use Font::TTF::Table::CMap;
 use Font::TTF::Table::Header;
@@ -15,6 +13,7 @@ use Font::TTF::Table::OS2;
 use Font::TTF::Table::PCLT;
 use Font::TTF::Table::MaxProfile;
 use Font::TTF::Table::Generic;
+use Font::TTF::Subset::Raw;
 use NativeCall;
 
 class Offsets is repr('CStruct') does Sfnt-Struct {
@@ -126,7 +125,7 @@ method buf(Str $tag) {
 
 #| add or update a table buffer
 multi method upd(Blob $buf, Str:D :$tag!) {
-    %!tables{$tag}:delete; # invalidate object
+    $_ .= WHAT with %!tables{$tag}; # invalidate object
     my $idx = (%!tag-idx{$tag} //= +%!tag-idx);
     @!bufs[$idx] = $buf;
 }
@@ -179,47 +178,8 @@ multi sub byte-align(buf8 $buf) {
     $buf;
 }
 
-# rebuild the glyphs index ('loca') and the glyphs buffer ('glyf')
-method !subset-glyph-tables(Font::TTF::Subset $subset) {
-
-    my Font::TTF::Table::GlyphIndex:D $index .= load(self);
-    my buf8 $glyphs-buf = self.buf('glyf');
-
-    my $bytes = $subset.raw.subset-glyphs($index.offsets, $glyphs-buf);
-
-    $glyphs-buf.reallocate($bytes);
-    $index.num-glyphs = $subset.len;
-
-    self.upd($index);
-    self.upd($glyphs-buf, :tag<glyf>)
-}
-
-# rebuild horizontal metrics
-method !subset-hori-tables(Font::TTF::Subset $subset) {
-    with self.load(Font::TTF::Table::HoriHeader) -> $hhea {
-        with self.load(Font::TTF::Table::HoriMetrics) -> $hmtx {
-            $hmtx.subset($subset);
-            self.upd($hmtx);
-            $hhea.numOfLongHorMetrics = $hmtx.num-long-metrics;
-            self.upd($hhea);
-        }
-    }
-}
-
-method subset(Font::TTF::Subset $subset) {
-    my Font::TTF::Table::Header:D $head .= load(self);
-    my Font::TTF::Table::MaxProfile:D $maxp .= load(self);
-
-    self!subset-glyph-tables($subset);
-    self!subset-hori-tables($subset);
-
-    my $num-glyphs := $subset.len;
-    self.upd($maxp).numGlyphs = $num-glyphs;
-
-}
-
 method !rebuild returns Blob {
-    # copy or rebuild tables. Preserve input order\
+    # copy or rebuild tables. Preserve input order
     my class ManifestItem {
         has Directory:D $.dir-in is required;
         has Blob:D $.buf is required;
@@ -262,6 +222,15 @@ method !rebuild returns Blob {
         byte-align($buf);
     }
     $buf;
+}
+
+method head {
+    self.load: 'head';
+}
+
+multi method FALLBACK(Font::TTF:D: $tag where {%!tables{$_}:exists}) {
+    self.load: $tag
+    ;
 }
 
 #| rebuilt the Sfnt Image
