@@ -1,0 +1,18 @@
+language: perl6
+sudo: false
+os:
+  - linux
+perl6:
+  - latest
+  - '2020.06'
+install:
+  - rakudobrew build zef
+  - git clone https://github.com/pdf-raku/CStruct-Packing-raku.git
+  - (cd CStruct-Packing-raku/ && zef install .)
+  - git clone https://github.com/pdf-raku/Font-FreeType-raku.git
+  - (cd Font-FreeType-raku/ && zef install .)
+  - zef --depsonly install .
+  - zef build .
+script:
+  - prove -ve "raku -I."
+  - zef install .

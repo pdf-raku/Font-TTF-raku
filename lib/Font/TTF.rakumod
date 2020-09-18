@@ -22,6 +22,20 @@ class Offsets is repr('CStruct') does Sfnt-Struct {
     has uint16  $.searchRange;
     has uint16  $.entrySelector;
     has uint16  $.rangeShift;
+
+    method init {
+        $!searchRange = 1;
+        $!entrySelector = 0;
+
+        while $!searchRange * 2 < $!numTables {
+            $!searchRange *= 2;
+            $!entrySelector++;
+        }
+        $!searchRange *= 16;
+        $!rangeShift = $!numTables * 16  -  $!searchRange;
+        self;
+    }
+
 }
 
 class Directory is repr('CStruct') does Sfnt-Struct {
@@ -196,15 +210,12 @@ method !rebuild returns Blob {
 
     @manifest .= sort(*.dir-in.tag);
 
-    my uint16 $numTables = +@manifest;
-    # todo: recalc properties. copy for now
-    my uint16  $searchRange = $!offsets.searchRange;
-    my uint16  $entrySelector = $!offsets.entrySelector;
-    my uint16  $rangeShift = $!offsets.rangeShift;
     my uint32  $ver = $!offsets.ver;
-    my Offsets $offsets .= new: :$numTables, :$ver, :$searchRange, :$entrySelector, :$rangeShift;
+    my uint32  $numTables = +@manifest;
+    my Offsets:D $offsets .= new(:$ver, :$numTables).init;
     my $buf = $offsets.pack;
-    my $offset = Offsets.packed-size + $numTables * Directory.packed-size;
+    my $offset = Offsets.packed-size  +  $offsets.numTables * Directory.packed-size;
+
     for @manifest {
         my $dir = .dir-in;
         my $tag-str = $dir.tag;
