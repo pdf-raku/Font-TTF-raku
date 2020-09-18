@@ -1,5 +1,5 @@
 SRC=src
-TRAVIS=https://travis-ci.org/p6-xml/LibXML-raku
+TRAVIS=https://travis-ci.org/pdf-raku/Font-TTF-raku
 
 all : lib
 
@@ -12,17 +12,13 @@ debug :
 coverage :
 	%MAKE% "DBG=-fprofile-arcs -ftest-coverage" "LD_DBG=-coverage -lgcov" all
 
-resources/libraries/%LIB-NAME% : $(SRC)/sfnt%O% $(SRC)/sfnt_subset%O%
+resources/libraries/%LIB-NAME% : $(SRC)/sfnt%O%
 	%LD% %LDSHARED% %LDFLAGS% %LDOUT%resources/libraries/%LIB-NAME% \
-	$(SRC)/sfnt%O% $(SRC)/sfnt_subset%O% \
+	$(SRC)/sfnt%O% \
 	%LIB-LDFLAGS% $(LD_DBG) 
 
 $(SRC)/sfnt%O% : $(SRC)/sfnt.c $(SRC)/sfnt.h $(SRC)/sfnt_subset.h
 	%CC% -I $(SRC) -c %CCSHARED% %CCFLAGS% %CCOUT%$(SRC)/sfnt%O% $(SRC)/sfnt.c %LIB-CFLAGS% $(DBG)
-
-$(SRC)/sfnt_subset%O% : $(SRC)/sfnt_subset.c $(SRC)/sfnt.h $(SRC)/sfnt_subset.h
-	%CC% -I $(SRC) -c %CCSHARED% %CCFLAGS% %CCOUT%$(SRC)/sfnt_subset%O% $(SRC)/sfnt_subset.c %LIB-CFLAGS% $(DBG)
-
 
 test : all
 	@prove -e"raku -I ." t

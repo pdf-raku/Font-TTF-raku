@@ -4,7 +4,7 @@ use Font::TTF::Table::CMap;
 use Font::TTF::Table::Header;
 use Font::TTF::Table::GlyphIndex;
 use Font::TTF::Table::MaxProfile;
-use Font::TTF::Subset::Raw;
+use Font::TTF::Raw;
 use File::Temp;
 plan 44;
 

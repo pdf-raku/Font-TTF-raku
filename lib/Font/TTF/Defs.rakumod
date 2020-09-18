@@ -2,6 +2,8 @@ unit module Font::TTF::Defs;
 
 use CStruct::Packing :Endian;
 
+our $SFNT-LIB is export(:SFNT-LIB) = %?RESOURCES<libraries/sfnt>;
+
 constant Sfnt-Struct is export(:Sfnt-Struct) = CStruct::Packing[NetworkEndian];
 
 class Fixed is export(:types) is repr('CStruct') does Sfnt-Struct {

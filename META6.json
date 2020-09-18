@@ -18,6 +18,7 @@
   "provides": {
       "Font::TTF": "lib/Font/TTF.rakumod",
       "Font::TTF::Defs": "lib/Font/TTF/Defs.rakumod",
+      "Font::TTF::Raw": "lib/Font/TTF/Raw.rakumod",
       "Font::TTF::Table": "lib/Font/TTF/Table.rakumod",
       "Font::TTF::Table::CMap": "lib/Font/TTF/Table/CMap.rakumod",
       "Font::TTF::Table::Generic": "lib/Font/TTF/Table/Generic.rakumod",
@@ -29,13 +30,10 @@
       "Font::TTF::Table::OS2": "lib/Font/TTF/Table/OS2.rakumod",
       "Font::TTF::Table::PCLT": "lib/Font/TTF/Table/PCLT.rakumod",
       "Font::TTF::Table::Postscript": "lib/Font/TTF/Table/Postscript.rakumod",
-      "Font::TTF::Table::VertHeader": "lib/Font/TTF/Table/VertHeader.rakumod",
-      "Font::TTF::Subset": "lib/Font/TTF/Subset.rakumod",
-      "Font::TTF::Subset::Raw": "lib/Font/TTF/Subset/Raw.rakumod",
-      "Font::TTF::Subset::Raw::Defs": "lib/Font/TTF/Subset/Raw/Defs.rakumod"
+      "Font::TTF::Table::VertHeader": "lib/Font/TTF/Table/VertHeader.rakumod"
   },
   "resources": [
-    "libraries/font-subset"
+    "libraries/sfnt"
   ],
   "source-url": "git://github.com/pdf-raku/Font-TTF-raku.git",
   "tags": [

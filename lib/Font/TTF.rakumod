@@ -2,6 +2,7 @@ unit class Font::TTF;
 
 use CStruct::Packing :Endian;
 use Font::TTF::Defs :Sfnt-Struct;
+use Font::TTF::Raw;
 use Font::TTF::Table;
 use Font::TTF::Table::CMap;
 use Font::TTF::Table::Header;
@@ -13,7 +14,6 @@ use Font::TTF::Table::OS2;
 use Font::TTF::Table::PCLT;
 use Font::TTF::Table::MaxProfile;
 use Font::TTF::Table::Generic;
-use Font::TTF::Subset::Raw;
 use NativeCall;
 
 class Offsets is repr('CStruct') does Sfnt-Struct {
