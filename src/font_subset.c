@@ -21,12 +21,12 @@ font_subset_create(FT_Face font, FT_ULong *charset, size_t len) {
     self->gids = calloc(len + 2, sizeof(FT_UInt));
     self->fail = NULL;
 
-    // add .notdef
+    // Add .notdef
     self->gids[0] = 0;
     self->charset[0] = 0;
     self->len++;
 
-    for (i = 0; i <= len; i++) {
+    for (i = charset[0] ? 0: 1; i <= len; i++) {
         FT_ULong code = charset[i];
         FT_UInt gid;
         if (i && code <= charset[i-1]) {
@@ -43,7 +43,6 @@ font_subset_create(FT_Face font, FT_ULong *charset, size_t len) {
 
     self->gids[self->len] = 0;
     self->charset[self->len] = 0;
-
     return self;
 }
 

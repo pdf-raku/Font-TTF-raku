@@ -12,8 +12,8 @@ class Font::TTF::Table::HoriMetrics
     
     method tag {'hmtx'}
 
-    has UInt $!num-glyphs is rw;
-    has UInt $.num-long-metrics is rw;
+    has UInt $!num-glyphs;
+    has UInt $.num-long-metrics;
     method elems { $!num-glyphs + 1}
 
     has buf8 $!buf;
@@ -62,10 +62,10 @@ class Font::TTF::Table::HoriMetrics
 
         for 0 ..^ $ss-num-glyphs -> $ss-gid {
             my $gid = $gid-map[$ss-gid];
-            if $gid <= $!num-long-metrics {
+            if $gid >= $!num-long-metrics {
                 # repack short metric
                 my $from-offset := 2 * $!num-long-metrics + 2 * $gid;
-                my $to-offset := 2 * $ss-num-long-metrics++ + 2 * $ss-gid;
+                my $to-offset := 2 * $ss-num-long-metrics + 2 * $ss-gid;
                 $!buf.subbuf-rw($to-offset, 2) = $!buf.subbuf($from-offset, 2)
                     unless $from-offset == $to-offset;
             }
@@ -73,6 +73,7 @@ class Font::TTF::Table::HoriMetrics
                 # repack long metric
                 my $from-offset := 4 * $gid;
                 my $to-offset := 4 * $ss-gid;
+                $ss-num-long-metrics++;
                 $!buf.subbuf-rw($to-offset, 4) = $!buf.subbuf($from-offset, 4)
                     unless $from-offset == $to-offset;
             }
