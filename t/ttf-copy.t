@@ -13,7 +13,7 @@ my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 my Font::TTF:D $ttf .= new: :$fh;
 my $maxp-checksum-in = $ttf.directories.first(*.tag eq 'maxp').checkSum;
 my $maxp-buf = $ttf.buf('maxp');
-is font_subset_sfnt_checksum($maxp-buf, $maxp-buf.bytes), $maxp-checksum-in;
+is sfnt_checksum($maxp-buf, $maxp-buf.bytes), $maxp-checksum-in;
 
 (my $filename, $fh) = tempfile;
 $fh.write: $ttf.Blob;

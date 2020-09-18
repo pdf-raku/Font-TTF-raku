@@ -24,14 +24,14 @@ class Offsets is repr('CStruct') does Sfnt-Struct {
     has uint16  $.rangeShift;
 
     method init {
-        $!searchRange = 1;
+        $!searchRange = 2;
         $!entrySelector = 0;
 
-        while $!searchRange * 2 < $!numTables {
+        while $!searchRange < $!numTables {
             $!searchRange *= 2;
             $!entrySelector++;
         }
-        $!searchRange *= 16;
+        $!searchRange *= 32;
         $!rangeShift = $!numTables * 16  -  $!searchRange;
         self;
     }
@@ -220,7 +220,7 @@ method !rebuild returns Blob {
         my $dir = .dir-in;
         my $tag-str = $dir.tag;
         my uint32 $tag = $dir.tag-encoded;
-        my uint32 $checkSum = font_subset_sfnt_checksum(.buf, .buf.bytes);
+        my uint32 $checkSum = sfnt_checksum(.buf, .buf.bytes);
         my $subbuf = $dir.pack;
         my uint32 $length = $dir.length;
         .dir-out = Directory.new: :$offset, :$tag, :$tag-str, :$length, :$checkSum;
