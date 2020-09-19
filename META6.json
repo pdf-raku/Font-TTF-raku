@@ -8,10 +8,9 @@
   ],
     "depends": [
       "CStruct::Packing",
-      "Font::FreeType",
       "File::Temp"
   ],
-  "description": "Font manipulation and subsetting API",
+  "description": "Open/TrueType Font manipulation API",
   "license": "Artistic-2.0",
   "name": "Font::TTF",
   "perl": "6.*",

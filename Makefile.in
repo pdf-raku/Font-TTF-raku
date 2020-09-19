@@ -17,7 +17,7 @@ resources/libraries/%LIB-NAME% : $(SRC)/sfnt%O%
 	$(SRC)/sfnt%O% \
 	%LIB-LDFLAGS% $(LD_DBG) 
 
-$(SRC)/sfnt%O% : $(SRC)/sfnt.c $(SRC)/sfnt.h $(SRC)/sfnt_subset.h
+$(SRC)/sfnt%O% : $(SRC)/sfnt.c $(SRC)/sfnt.h
 	%CC% -I $(SRC) -c %CCSHARED% %CCFLAGS% %CCOUT%$(SRC)/sfnt%O% $(SRC)/sfnt.c %LIB-CFLAGS% $(DBG)
 
 test : all

@@ -92,6 +92,7 @@ method tags {
 }
 
 submethod TWEAK {
+    $!fh.seek(0, SeekFromBeginning);
     $!offsets .= read($!fh);
     for 0 ..^ $!offsets.numTables {
         my Directory $dir .= read($!fh);
@@ -233,6 +234,17 @@ method !rebuild returns Blob {
         byte-align($buf);
     }
     $buf;
+}
+
+method glyph-buf(UInt:D $gid is copy --> buf8) {
+    my buf8 $glyf-buf = self.buf('glyf');
+    my $loca = self.loca;
+    my $start = $loca[$gid];
+    my $end = $loca[$gid+1];
+
+    my UInt $len = $end - $start;
+
+    $glyf-buf.subbuf($start, $len);
 }
 
 method head {
