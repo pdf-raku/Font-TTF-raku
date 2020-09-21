@@ -236,15 +236,14 @@ method !rebuild returns Blob {
     $buf;
 }
 
-method glyph-buf(UInt:D $gid is copy --> buf8) {
-    my buf8 $glyf-buf = self.buf('glyf');
-    my $loca = self.loca;
-    my $start = $loca[$gid];
-    my $end = $loca[$gid+1];
+method glyph-buf(UInt:D $gid --> buf8:D) {
+    given  self.loca {
+        my UInt:D $start := .[$gid];
+        my UInt:D $end   := .[$gid+1];
+        my UInt:D $len   := $end - $start;
 
-    my UInt $len = $end - $start;
-
-    $glyf-buf.subbuf($start, $len);
+        self.buf('glyf').subbuf($start, $len);
+    }
 }
 
 method head {

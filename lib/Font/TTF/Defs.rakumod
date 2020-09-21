@@ -24,3 +24,19 @@ constant FWord  is export(:types) = int16;
 constant uFWord  is export(:types) = uint16;
 constant longDateTime is export(:types) = int64;
 
+# PlatformID and Encoding, as used in 'cmap' and 'name' tables
+
+enum PlatformID is export(:PlatformID)  <UnicodePlatform MacintoshPlatform ReservedPlatform MicrosoftPlatform>;
+
+# Microsoft embraced extensions
+enum WinEncoding is export(:WinEncoding) (
+    :WinEncSymbol(0),
+    :WinEncodingBMP(1),
+    :WinEncShift-JIS(2),
+    :WinEncPRC(3),
+    :WinEncBigFive(4),
+    :WinEncJohab(5),
+    :WinEncUCS_4(6)
+);
+
+

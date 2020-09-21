@@ -1,5 +1,5 @@
 use Test;
-plan 62;
+plan 65;
 use Font::TTF;
 use Font::TTF::Table::CMap;
 use Font::TTF::Table::Header;
@@ -91,10 +91,14 @@ my Font::TTF::Table::CMap $cmap .= load($ttf);
 is $cmap.elems, 2;
 
 is $cmap[0].platformID, 1;
+is $cmap[0].platformEncodingID, 0;
 is $cmap[0].subbuf.bytes, 262;
 
 is $cmap[1].platformID, 3;
+is $cmap[1].platformEncodingID, 1;
 is $cmap[1].subbuf.bytes, 574;
+my $subtable = $cmap[1].load;
+is $subtable.length, 574;
 
 my buf8 $glyph-buf = $ttf.glyph-buf(0);
 is-deeply $glyph-buf, buf8.new(0,2,0,102,254,150,4,102,5,164,0,3,0,7,0,26,64,12,4,251,0,6,251,1,8,5,127,2,4,0,47,196,212,236,49,0,16,212,236,212,236,48,19,17,33,17,37,33,17,33,102,4,0,252,115,3,27,252,229,254,150,7,14,248,242,114,6,41);

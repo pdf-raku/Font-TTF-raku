@@ -4,6 +4,7 @@ class Font::TTF::Table::CMap
     is Font::TTF::Table::Generic {
 
     use Font::TTF::Defs :types, :Sfnt-Struct;
+    use Font::TTF::Table::CMap::Format4;
 
     method tag {'cmap'}
 
@@ -19,10 +20,28 @@ class Font::TTF::Table::CMap
             has uint32	$.offset;       	# Offset of the mapping table
         }
         has Encoding $.encoding handles<platformID platformEncodingID offset>;
-        has blob8 $.subbuf;
-        has $.obj;
-        method fetch {
-            $!obj //= do {
+        class FormatHeader is repr('CStruct') does Sfnt-Struct {
+            has uint16	$.format;
+            has uint16	$.length;
+        }
+        has buf8 $.subbuf is required;
+        has $!object;
+        multi method load(Subtable:U:) { self }
+        multi method load(Subtable:D:) {
+            $!object //= do {
+                # Peek at the first two fields, which are aloways
+                # format and length
+                my FormatHeader:D $hdr .= unpack($!subbuf);
+
+                my $class = do given $hdr.format {
+                    when 4 {
+                        Font::TTF::Table::CMap::Format4;
+                    }
+                    default {
+                        die "todo format $_";
+                    }
+                }
+                $class.new: :buf($!subbuf);
             }
         }
     }
@@ -59,5 +78,6 @@ class Font::TTF::Table::CMap
 
         self;
     }
+
     method pack(|) {...}
 }
