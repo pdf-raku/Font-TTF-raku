@@ -4,7 +4,9 @@ class Font::TTF::Table::CMap
     is Font::TTF::Table::Generic {
 
     use Font::TTF::Defs :types, :Sfnt-Struct;
+    use Font::TTF::Table::CMap::Format0;
     use Font::TTF::Table::CMap::Format4;
+    use Font::TTF::Table::CMap::Generic;
 
     method tag {'cmap'}
 
@@ -23,6 +25,7 @@ class Font::TTF::Table::CMap
         class FormatHeader is repr('CStruct') does Sfnt-Struct {
             has uint16	$.format;
             has uint16	$.length;
+            has uint16  $.language;
         }
         has buf8 $.subbuf is required;
         has $!object;
@@ -34,11 +37,15 @@ class Font::TTF::Table::CMap
                 my FormatHeader:D $hdr .= unpack($!subbuf);
 
                 my $class = do given $hdr.format {
+                    when 0 {
+                        Font::TTF::Table::CMap::Format0;
+                    }
                     when 4 {
                         Font::TTF::Table::CMap::Format4;
                     }
                     default {
-                        die "todo format $_";
+                        warn "todo format $_";
+                        Font::TTF::Table::CMap::Generic;
                     }
                 }
                 $class.new: :buf($!subbuf);
