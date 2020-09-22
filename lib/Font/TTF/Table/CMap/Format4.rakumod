@@ -28,19 +28,39 @@ has CArray[uint16] $.glyphIndexArray;  # [variable] Glyph index array
 sub unpack-array($carray is rw, $buf, $offset, $bytes = $buf.bytes - $offset) {
     my $words = $bytes div 2;
     $carray .= new();
-    $carray[$words] = 0;
+    $carray[$words - 1] = 0 if $words;
     mem-unpack($carray, $buf.subbuf($offset, $bytes), :endian(NetworkEndian))
+}
+
+sub pack-array($carray, $buf, $offset, $bytes = $buf.bytes - $offset) {
+    my $words = $carray.elems;
+    die "array length mismatch. expecting {$bytes div 2}, got $words"
+        unless $words * 2 == $bytes;
+    mem-pack($carray, $buf.subbuf($offset, $bytes), :endian(NetworkEndian))
 }
 
 submethod TWEAK(buf8:D :$buf!) {
     $!header .= unpack($buf);
     my UInt $offset = $!header.packed-size;
-    my UInt:D $heap-len = self.length - $offset;
     my UInt:D $seg-len = self.segCountX2;
+
     unpack-array($!endCode,         $buf, $offset, $seg-len);
-    $offset++; # skip $!reservedPad
+    $offset += 2; # skip $!reservedPad
     unpack-array($!startCode,       $buf, $offset += $seg-len, $seg-len);
     unpack-array($!idDelta,         $buf, $offset += $seg-len, $seg-len);
     unpack-array($!idRangeOffset,   $buf, $offset += $seg-len, $seg-len);
     unpack-array($!glyphIndexArray, $buf, $offset += $seg-len);
+}
+
+method pack(buf8 $buf = buf8.new) {
+    $buf.reallocate(0);
+    $!header.pack($buf);
+    my $endian = NetworkEndian;
+
+    $buf.append: mem-pack($!endCode,         :$endian);
+    $buf.append: (0,0); # padding
+    $buf.append: mem-pack($!startCode,       :$endian);
+    $buf.append: mem-pack($!idDelta,         :$endian);
+    $buf.append: mem-pack($!idRangeOffset,   :$endian);
+    $buf.append: mem-pack($!glyphIndexArray, :$endian);
 }

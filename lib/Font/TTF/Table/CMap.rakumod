@@ -21,7 +21,7 @@ class Font::TTF::Table::CMap
             has uint16	$.platformEncodingID;	# Platform-specific encoding identifier
             has uint32	$.offset;       	# Offset of the mapping table
         }
-        has Encoding $.encoding handles<platformID platformEncodingID offset>;
+        has Encoding $.encoding handles<platformID platformEncodingID offset pack>;
         class FormatHeader is repr('CStruct') does Sfnt-Struct {
             has uint16	$.format;
             has uint16	$.length;
@@ -77,7 +77,7 @@ class Font::TTF::Table::CMap
             my UInt $offset := $encoding.offset;
             my UInt $len := $n < +@encodings
                 ?? @encodings[.key + 1].offset - $offset
-                !! $buf.elems - $offset;
+                !! $buf.bytes - $offset;
 
             my Blob:D $subbuf := $buf.subbuf($offset, $len);
             Subtable.new: :$encoding, :$subbuf;
@@ -86,5 +86,13 @@ class Font::TTF::Table::CMap
         self;
     }
 
-    method pack(|) {...}
+    method pack(buf8 $buf = buf8.new) {
+        $buf.reallocate(0);
+        $!index.pack($buf);
+        $buf.append(.pack)
+            for @!subtables;
+        $buf.append(.load.pack)
+            for @!subtables;
+        $buf;
+    }
 }

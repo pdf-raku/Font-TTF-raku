@@ -13,9 +13,9 @@ class Font::TTF::Table::HoriMetrics
 
     has UInt $!num-glyphs;
     has UInt $.num-long-metrics;
-    method elems { $!num-glyphs + 1}
-
     has buf8 $!buf;
+
+    method elems { $!num-glyphs + 1}
 
     class longHoriMetric is repr('CStruct') does Sfnt-Struct {
         has uint16 $.advanceWidth;
@@ -50,7 +50,9 @@ class Font::TTF::Table::HoriMetrics
         $!num-long-metrics = $hhea.numOfLongHorMetrics;
         self;
     }
-    method pack(buf8 $buf is rw) {
-        $buf = $!buf;
+    multi method pack { $!buf }
+    multi method pack(buf8:D $buf) {
+        $buf.reallocate(0);
+        $buf.append: $!buf;
     }
 }

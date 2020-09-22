@@ -42,7 +42,8 @@ class Font::TTF::Table::GlyphIndex
         $!scale = $is-long ?? 1 !! 2;
         self;
     }
-    method pack(buf8 $buf) {
-        mem-pack($!offsets, :n($!num-glyphs+1), :endian(NetworkEndian));
+    method pack(buf8 $buf = buf8.new) {
+        $buf.reallocate($!num-glyphs * nativesizeof($!offsets.of));
+        mem-pack($!offsets, $buf, :n($!num-glyphs+1), :endian(NetworkEndian));
     }
 }

@@ -15,6 +15,7 @@ use Font::TTF::Table::PCLT;
 use Font::TTF::Table::MaxProfile;
 use Font::TTF::Table::Generic;
 use NativeCall;
+use Method::Also;
 
 class Offsets is repr('CStruct') does Sfnt-Struct {
     has uint32  $.ver;
@@ -193,7 +194,7 @@ multi sub byte-align(buf8 $buf) {
     $buf;
 }
 
-method !rebuild returns Blob {
+method pack returns Blob is also<Blob> {
     # copy or rebuild tables. Preserve input order
     my class ManifestItem {
         has Directory:D $.dir-in is required;
@@ -251,12 +252,6 @@ method head {
 }
 
 multi method FALLBACK(Font::TTF:D: $tag where {%!tables{$_}:exists}) {
-    self.load: $tag
-    ;
-}
-
-#| rebuilt the Sfnt Image
-method Blob {
-    self!rebuild;
+    self.load: $tag;
 }
 
