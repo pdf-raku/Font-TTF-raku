@@ -23,6 +23,7 @@
       "Font::TTF::Table::CMap": "lib/Font/TTF/Table/CMap.rakumod",
       "Font::TTF::Table::CMap::Format0": "lib/Font/TTF/Table/CMap/Format0.rakumod",
       "Font::TTF::Table::CMap::Format4": "lib/Font/TTF/Table/CMap/Format4.rakumod",
+      "Font::TTF::Table::CMap::Format12": "lib/Font/TTF/Table/CMap/Format12.rakumod",
       "Font::TTF::Table::CMap::Generic": "lib/Font/TTF/Table/CMap/Generic.rakumod",
       "Font::TTF::Table::Generic": "lib/Font/TTF/Table/Generic.rakumod",
       "Font::TTF::Table::Header": "lib/Font/TTF/Table/Header.rakumod",
