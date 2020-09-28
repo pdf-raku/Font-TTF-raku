@@ -4,11 +4,11 @@ use Font::TTF::Defs :Sfnt-Struct;
 use NativeCall;
 use CStruct::Packing :Endian;
 
-class Header is repr('CStruct') does Sfnt-Struct {
+use Font::TTF::Table::CMap::Header16;
+class Header
+    is repr('CStruct')
+    is Font::TTF::Table::CMap::Header16 {
 
-    has uint16	$.format;               # Format number is set to 4
-    has uint16	$.length is rw;         # Length of subtable in bytes
-    has uint16	$.language;             # Language code
     has uint16	$.segCountX2;           # 2 * segCount
     has uint16	$.searchRange;          # 2 * (2**FLOOR(log2(segCount)))
     has uint16	$.entrySelector;        # log2(searchRange/2)

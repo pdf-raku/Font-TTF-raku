@@ -5,11 +5,10 @@ use NativeCall;
 use CStruct::Packing :Endian;
 use Method::Also;
 
-class Header is repr('CStruct') does Sfnt-Struct {
-
-    has uint16	$.format;               # Format number is set to 12
-    has uint32	$.length is rw;         # Length of subtable in bytes
-    has uint16	$.language;             # Language code
+use Font::TTF::Table::CMap::Header32;
+class Header
+    is repr('CStruct')
+    is Font::TTF::Table::CMap::Header32 {
     has uint32  $.numGroups is rw;
 }
 

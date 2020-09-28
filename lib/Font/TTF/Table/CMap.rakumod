@@ -6,7 +6,9 @@ class Font::TTF::Table::CMap
     use Font::TTF::Defs :types, :Sfnt-Struct;
     use Font::TTF::Table::CMap::Format0;
     use Font::TTF::Table::CMap::Format4;
+    use Font::TTF::Table::CMap::Format12;
     use Font::TTF::Table::CMap::Generic;
+    use CStruct::Packing :Endian;
 
     method tag {'cmap'}
 
@@ -22,11 +24,6 @@ class Font::TTF::Table::CMap
             has uint32	$.offset;       	# Offset of the mapping table
         }
         has Encoding $.encoding handles<platformID platformEncodingID offset pack>;
-        class FormatHeader is repr('CStruct') does Sfnt-Struct {
-            has uint16	$.format;
-            has uint16	$.length;
-            has uint16  $.language;
-        }
         has buf8 $.subbuf is required;
         has $!object;
         multi method load(Subtable:U:) { self }
@@ -34,14 +31,17 @@ class Font::TTF::Table::CMap
             $!object //= do {
                 # Peek at the first two fields, which are aloways
                 # format and length
-                my FormatHeader:D $hdr .= unpack($!subbuf);
+                my uint16 $format = $!subbuf.read-uint16(0, NetworkEndian);
 
-                my $class = do given $hdr.format {
+                my $class = do given $format {
                     when 0 {
                         Font::TTF::Table::CMap::Format0;
                     }
                     when 4 {
                         Font::TTF::Table::CMap::Format4;
+                    }
+                    when 12 {
+                        Font::TTF::Table::CMap::Format12;
                     }
                     default {
                         warn "todo format $_";
@@ -56,8 +56,7 @@ class Font::TTF::Table::CMap
     has Index $.index;
     has Subtable @.subtables handles<AT-POS Numeric elems>;
     
-    submethod TWEAK {
-        my $buf := self.buf;
+    multi submethod TWEAK(:$buf!) {
         $!index .= unpack($buf);
         my UInt $offset = $!index.packed-size;
         my UInt $encoding-size = Subtable::Encoding.packed-size;
@@ -86,6 +85,7 @@ class Font::TTF::Table::CMap
         self;
     }
 
+    multi submethod TWEAK(:@subtables!) { ... }
     method pack(buf8 $buf = buf8.new) {
         $buf.reallocate(0);
         $!index.pack($buf);

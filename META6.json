@@ -21,6 +21,8 @@
       "Font::TTF::Raw": "lib/Font/TTF/Raw.rakumod",
       "Font::TTF::Table": "lib/Font/TTF/Table.rakumod",
       "Font::TTF::Table::CMap": "lib/Font/TTF/Table/CMap.rakumod",
+      "Font::TTF::Table::CMap::Header16": "lib/Font/TTF/Table/CMap/Header16.rakumod",
+      "Font::TTF::Table::CMap::Header32": "lib/Font/TTF/Table/CMap/Header32.rakumod",
       "Font::TTF::Table::CMap::Format0": "lib/Font/TTF/Table/CMap/Format0.rakumod",
       "Font::TTF::Table::CMap::Format4": "lib/Font/TTF/Table/CMap/Format4.rakumod",
       "Font::TTF::Table::CMap::Format12": "lib/Font/TTF/Table/CMap/Format12.rakumod",
