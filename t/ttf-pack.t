@@ -45,8 +45,8 @@ is-deeply padded($locs.pack), padded($buf);
 
 $buf = $ttf.buf('cmap');
 my Font::TTF::Table::CMap $cmap .= load($ttf);
-is-deeply $cmap[0].load.pack, $cmap[0].subbuf;
-is-deeply $cmap[1].load.pack, $cmap[1].subbuf;
+is-deeply $cmap[0].object.pack, $cmap[0].subbuf;
+is-deeply $cmap[1].object.pack, $cmap[1].subbuf;
 is-deeply $cmap.pack, $buf;
 
 done-testing;

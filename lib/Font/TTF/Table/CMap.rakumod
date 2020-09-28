@@ -26,13 +26,12 @@ class Font::TTF::Table::CMap
             has uint32	$.offset;       	# Offset of the mapping table
         }
         has Encoding $.encoding handles<platformID platformEncodingID offset pack>;
-        has $.object;
         has buf8 $.subbuf;
         method subbuf {
-            $!subbuf //= self.load.buf;
+            $!subbuf //= self.object.buf;
         }
-        multi method load(Subtable:U:) { self }
-        multi method load(Subtable:D:) {
+        has $.object;
+        method object(Subtable:D:) {
             $!object //= do {
                 # Peek at the first two fields, which are aloways
                 # format and length
@@ -104,7 +103,7 @@ class Font::TTF::Table::CMap
         $!index.pack($buf);
         $buf.append(.pack)
             for @!subtables;
-        $buf.append(.load.pack)
+        $buf.append(.object.pack)
             for @!subtables;
         $buf;
     }

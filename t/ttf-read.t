@@ -95,7 +95,7 @@ is $cmap.elems, 2;
 is $cmap[0].platformID, 1;
 is $cmap[0].platformEncodingID, 0;
 is $cmap[0].subbuf.bytes, 262;
-my $subtable = $cmap[0].load;
+my $subtable = $cmap[0].object;
 isa-ok $subtable, Font::TTF::Table::CMap::Format0;
 is $subtable.format, 0;
 is $subtable.length, 262;
@@ -105,7 +105,7 @@ is $subtable[65], 36; # A
 is $cmap[1].platformID, 3;
 is $cmap[1].platformEncodingID, 1;
 is $cmap[1].subbuf.bytes, 574;
-$subtable = $cmap[1].load;
+$subtable = $cmap[1].object;
 isa-ok $subtable, Font::TTF::Table::CMap::Format4;
 is $subtable.format, 4;
 is $subtable.length, 574;
