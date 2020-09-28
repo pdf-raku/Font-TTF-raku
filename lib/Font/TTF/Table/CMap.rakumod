@@ -12,6 +12,8 @@ class Font::TTF::Table::CMap
 
     method tag {'cmap'}
 
+    method buf { callsame() //= self.pack }
+
     class Index is repr('CStruct') does Sfnt-Struct {
         has uint16 $.version;          # Version number (Set to zero)
         has uint16 $.numberSubtables;  # Number of encoding subtables
@@ -24,8 +26,11 @@ class Font::TTF::Table::CMap
             has uint32	$.offset;       	# Offset of the mapping table
         }
         has Encoding $.encoding handles<platformID platformEncodingID offset pack>;
-        has buf8 $.subbuf is required;
-        has $!object;
+        has $.object;
+        has buf8 $.subbuf;
+        method subbuf {
+            $!subbuf //= self.load.buf;
+        }
         multi method load(Subtable:U:) { self }
         multi method load(Subtable:D:) {
             $!object //= do {
@@ -85,7 +90,15 @@ class Font::TTF::Table::CMap
         self;
     }
 
-    multi submethod TWEAK(:@subtables!) { ... }
+    # handle simple case of building a single type-12 encoding table
+    multi submethod TWEAK(Font::TTF::Table::CMap::Format12 :format($object)!) {
+        # wrap formats
+        $!index .= new: :version(0), :numberSubtables(1);
+        my $offset = $!index.packed-size + Subtable::Encoding.packed-size;
+        my Subtable::Encoding $encoding .= new: :platformId(0), :platformEncodingID(4), :$offset;
+
+        @!subtables = [ Subtable.new: :$encoding, :$object, ];
+    }
     method pack(buf8 $buf = buf8.new) {
         $buf.reallocate(0);
         $!index.pack($buf);
