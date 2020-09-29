@@ -123,14 +123,13 @@ multi method buf(Str $tag) {
             .pack;
         } // do {
             given @!directories[$idx] {
+                with @!lengths[$idx] -> $max-len {
+                    die "length for '$tag' {.length} > $max-len"
+                        if .length > $max-len;
+                }
                 my $offset = .offset;
                 $!fh.seek($offset, SeekFromBeginning);
-                with @!lengths[$idx] {
-                    $!fh.read($_);
-                }
-                else {
-                    $!fh.slurp-rest(:bin);
-                }
+                $!fh.read(.length);
             }
         }
     }

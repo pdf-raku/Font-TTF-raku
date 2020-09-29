@@ -33,9 +33,16 @@ class Font::TTF::Table::CMap
         has $.object;
         method object(Subtable:D:) {
             $!object //= do {
-                # Peek at the first two fields, which are aloways
+                # Peek at the first two fields, which are always
                 # format and length
-                my uint16 $format = $!subbuf.read-uint16(0, NetworkEndian);
+                my UInt $format = $!subbuf.read-uint16(0, NetworkEndian);
+                unless $format {
+                    # format header can be 2 or 4 bit. format 0 always has
+                    # length 262; otherwise assume 4-bit format.
+                    unless 262 == $!subbuf.read-uint16(2, NetworkEndian) {
+                        $format = $!subbuf.read-uint32(0, NetworkEndian);
+                    }
+                }
 
                 my $class = do given $format {
                     when 0 {
