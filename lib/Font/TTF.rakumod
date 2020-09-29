@@ -117,7 +117,7 @@ method !setup-lengths {
     }
 }
 
-method buf(Str $tag) {
+multi method buf(Str $tag) {
     with %!tag-idx{$tag} -> $idx {
         @!bufs[$idx] //= do with %!tables{$tag} {
             .pack;
@@ -138,6 +138,8 @@ method buf(Str $tag) {
         buf8;
     }
 }
+
+multi method buf { self.Blob }
 
 #| add or update a table buffer
 multi method upd(Blob $buf, Str:D :$tag!) {
@@ -224,7 +226,7 @@ method pack returns Blob is also<Blob> {
         my uint32 $tag = $dir.tag-encoded;
         my uint32 $checkSum = sfnt_checksum(.buf, .buf.bytes);
         my $subbuf = $dir.pack;
-        my uint32 $length = $dir.length;
+        my uint32 $length = .buf.bytes;
         .dir-out = Directory.new: :$offset, :$tag, :$tag-str, :$length, :$checkSum;
         $buf.append: .dir-out.pack;
         $offset += $length;
