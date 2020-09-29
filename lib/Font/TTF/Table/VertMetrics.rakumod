@@ -1,15 +1,15 @@
 use Font::TTF::Table::Generic;
 
-class Font::TTF::Table::HoriMetrics
+class Font::TTF::Table::VertMetrics
     is Font::TTF::Table::Generic {
 
     use Font::TTF::Defs :Sfnt-Struct;
-    use Font::TTF::Table::HoriHeader;
+    use Font::TTF::Table::VertHeader;
     use Font::TTF::Table::MaxProfile;
     use CStruct::Packing :&mem-unpack, :&mem-pack;
     use NativeCall;
 
-    method tag {'hmtx'}
+    method tag {'vmtx'}
 
     has UInt $!num-glyphs;
     has UInt $.num-long-metrics;
@@ -17,37 +17,37 @@ class Font::TTF::Table::HoriMetrics
 
     method elems { $!num-glyphs + 1}
 
-    class longHoriMetric is repr('CStruct') does Sfnt-Struct {
-        has uint16 $.advanceWidth;
-        has uint16 $.leftSideBearing;
+    class longVertMetric is repr('CStruct') does Sfnt-Struct {
+        has uint16 $.advanceHeight;
+        has uint16 $.topSideBearing;
     }
 
-    class shortHoriMetric is repr('CStruct') does Sfnt-Struct {
-        has uint16 $.leftSideBearing;
+    class shortVertMetric is repr('CStruct') does Sfnt-Struct {
+        has uint16 $.topSideBearing;
     }
 
     multi method AT-POS(Int() $gid where 0 <= * <= $!num-long-metrics) {
         my $offset := 4 * $gid;
-        longHoriMetric.unpack($!buf, :$offset);
+        longVertMetric.unpack($!buf, :$offset);
     }
 
     multi method AT-POS(Int() $gid where 0 <= * <= $!num-glyphs) {
         my $offset := 2 * $!num-long-metrics + 2 * $gid;
-        shortHoriMetric.unpack($!buf, :$offset);
+        shortVertMetric.unpack($!buf, :$offset);
     }
 
-    constant HoriHeader = Font::TTF::Table::HoriHeader;
+    constant VertHeader = Font::TTF::Table::VertHeader;
     constant MaxProfile = Font::TTF::Table::MaxProfile;
 
     submethod TWEAK(
         :$loader,
-        HoriHeader:D :$hhea = HoriHeader.load($loader),
+        VertHeader:D :$vhea = VertHeader.load($loader),
         MaxProfile:D :$maxp = MaxProfile.load($loader),
         :$!buf              = $loader.buf(self.tag),
     ) {
 
         $!num-glyphs = $maxp.numGlyphs;
-        $!num-long-metrics = $hhea.numOfLongHorMetrics;
+        $!num-long-metrics = $vhea.numOfLongVerMetrics;
         self;
     }
     multi method pack { $!buf }

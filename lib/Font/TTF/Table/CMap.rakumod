@@ -35,17 +35,12 @@ class Font::TTF::Table::CMap
             $!object //= do {
                 # Peek at the first two fields, which are always
                 # format and length
-                my UInt $format = $!subbuf.read-uint16(0, NetworkEndian);
-                unless $format {
-                    # format header can be 2 or 4 bit. format 0 always has
-                    # length 262; otherwise assume 4-bit format.
-                    unless 262 == $!subbuf.read-uint16(2, NetworkEndian) {
-                        $format = $!subbuf.read-uint32(0, NetworkEndian);
-                    }
-                }
+                my UInt $format = $!subbuf.read-uint16(0, NetworkEndian)
+                    || $!subbuf.read-uint32(0, NetworkEndian);
 
                 my $class = do given $format {
-                    when 0 {
+                    when 262 {
+                        # actually format 0 (2 bytes) + length 262 (2 bytes)
                         Font::TTF::Table::CMap::Format0;
                     }
                     when 4 {

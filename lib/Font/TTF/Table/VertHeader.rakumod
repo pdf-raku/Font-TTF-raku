@@ -18,5 +18,5 @@ class Font::TTF::Table::VertHeader
     has int16	$.caretSlopeRun;	# See the caretSlopeRise field. Value = 0 for non-slanted fonts.
     has int16	$.caretOffset;	# The amount by which the highlight on a slanted glyph needs to be shifted away from the glyph in order to produce the best appearance. Set value equal to 0 for non-slanted fonts.
     has int16	($!reserved, $!r2, $!r3, $!r4);	# set value to 0
-    has uint16	$.numOfLongVerMetrics;	# Number of advance heights in the Vertical Metrics table.
+    has uint16	$.numOfLongVerMetrics is rw;	# Number of advance heights in the Vertical Metrics table.
 }

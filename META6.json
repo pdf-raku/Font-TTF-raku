@@ -36,7 +36,8 @@
       "Font::TTF::Table::OS2": "lib/Font/TTF/Table/OS2.rakumod",
       "Font::TTF::Table::PCLT": "lib/Font/TTF/Table/PCLT.rakumod",
       "Font::TTF::Table::Postscript": "lib/Font/TTF/Table/Postscript.rakumod",
-      "Font::TTF::Table::VertHeader": "lib/Font/TTF/Table/VertHeader.rakumod"
+      "Font::TTF::Table::VertHeader": "lib/Font/TTF/Table/VertHeader.rakumod",
+      "Font::TTF::Table::VertMetrics": "lib/Font/TTF/Table/VertMetrics.rakumod"
   },
   "resources": [
     "libraries/sfnt"

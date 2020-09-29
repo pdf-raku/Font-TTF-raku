@@ -9,6 +9,7 @@ use Font::TTF::Table::Header;
 use Font::TTF::Table::HoriHeader;
 use Font::TTF::Table::HoriMetrics;
 use Font::TTF::Table::VertHeader;
+use Font::TTF::Table::VertMetrics;
 use Font::TTF::Table::GlyphIndex;
 use Font::TTF::Table::OS2;
 use Font::TTF::Table::PCLT;
@@ -77,16 +78,13 @@ our @Tables = [
     Font::TTF::Table::CMap, Font::TTF::Table::Header,
     Font::TTF::Table::HoriHeader, Font::TTF::Table::HoriMetrics,
     Font::TTF::Table::GlyphIndex, Font::TTF::Table::MaxProfile,
-    Font::TTF::Table::VertHeader,
+    Font::TTF::Table::VertHeader, Font::TTF::Table::VertMetrics,
     Font::TTF::Table::PCLT, Font::TTF::Table::OS2,
 ];
 has %!tables = @Tables.map: { .tag => $_ };
 has Directory @.directories;
 has UInt @.lengths;
 has Buf @.bufs;
-has Set $.rebuilt = set <
-    maxp hdmx htmx cmap loca glyf name kern
->;
 
 method tags {
     @!directories.grep(*.defined)>>.tag;
