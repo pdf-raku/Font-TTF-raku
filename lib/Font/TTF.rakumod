@@ -44,7 +44,7 @@ class Directory is repr('CStruct') does Sfnt-Struct {
     has uint32	$.tag; 	        # 4-byte identifier
     has uint32	$.checkSum;	# checksum for this table
     has uint32	$.offset;	# offset from beginning of sfnt
-    has uint32	$.length;	# length of this table in byte (actual length not padded length)
+    has uint32	$.length;	# length of this table in bytes (actual length not padded length)
 
     sub tag-decode(UInt:D $tag is copy) is export(:tag-decode) {
         my @chrs = (1..4).map: {
@@ -55,7 +55,7 @@ class Directory is repr('CStruct') does Sfnt-Struct {
         @chrs.reverse.join.trim;
     }
 
-    sub tag-encode(Str:D $s --> UInt) is export {
+    our sub tag-encode(Str:D $s --> UInt) {
         my uint32 $enc = 0;
         for $s.ords {
             $enc *= 256;
@@ -70,66 +70,100 @@ class Directory is repr('CStruct') does Sfnt-Struct {
         tag-decode($!tag);
     }
 }
+class TableProxy is rw {
+    has $.loader is required;
+    has Str $.tag is required;
+    has Directory $.dir;
+    has buf8 $.buf;
+    has $.obj = Font::TTF::Table::Generic.new: :$!tag, :$!buf;
+    method buf is rw {
+        Proxy.new(
+            FETCH => { $!buf //= .pack with $!obj; $!buf },
+            STORE => -> $, $!buf { $_ = .WHAT with $!obj }
+        );
+    }
+    method obj is rw {
+        Proxy.new(
+            FETCH => {
+                $!obj //= $!obj.new: :$!tag, :buf($_), :$!loader
+                    with $!buf;
+                $!obj;
+            },
+            STORE => -> $, $!obj { $_ = .WHAT with $!buf }
+        );
+    }
+    method live {
+        ($!obj // $!buf // $!dir).defined
+    }
+}
 has IO::Handle:D $.fh is required;
 has Offsets $!offsets handles<numTables>;
-has UInt %!tag-idx;
 
-our @Tables = [
+our @KnownTables = [
     Font::TTF::Table::CMap, Font::TTF::Table::Header,
     Font::TTF::Table::HoriHeader, Font::TTF::Table::HoriMetrics,
     Font::TTF::Table::GlyphIndex, Font::TTF::Table::MaxProfile,
     Font::TTF::Table::VertHeader, Font::TTF::Table::VertMetrics,
     Font::TTF::Table::PCLT, Font::TTF::Table::OS2,
 ];
-has %!tables = @Tables.map: { .tag => $_ };
-has Directory @.directories;
-has UInt @.lengths;
-has Buf @.bufs;
+has TableProxy %!tables = @KnownTables.map: -> $obj {
+    my $tag = $obj.tag;
+    $tag => TableProxy.new: :$obj, :$tag, :loader(self);
+};
 
 method tags {
-    @!directories.grep(*.defined)>>.tag;
+    %!tables.values.grep(*.live)>>.tag.sort;
+}
+
+method directory($tag) { .dir with %!tables{$tag} }
+
+method delete($tag) {
+    with %!tables{$tag} {
+        .buf = buf8;
+        .dir = Directory;
+    }
 }
 
 submethod TWEAK {
+    my Directory @dirs;
     $!fh.seek(0, SeekFromBeginning);
     $!offsets .= read($!fh);
+
     for 0 ..^ $!offsets.numTables {
         my Directory $dir .= read($!fh);
-        %!tag-idx{$dir.tag} = $_;
-        @!directories.push: $dir;
+        my $tag = $dir.tag;
+        with %!tables{$tag} {
+            .dir = $dir;
+        }
+        else {
+            $_ .= new: :$dir, :$tag, :loader(self);
+        }
+        @dirs.push: $dir;
     }
 
-    self!setup-lengths();
-    self;
+    self!check-lengths(@dirs);
 }
 
-method !setup-lengths {
+method !check-lengths(@dirs) {
     my $prev;
-    for @!directories.sort(*.offset) -> $dir {
+    for @dirs.sort(*.offset) -> $dir {
         with $prev {
             my $offset = $dir.offset;
-            my $idx = %!tag-idx{$prev.tag};
-            @!lengths[$idx] = $offset - $prev.offset;
+            my $table = %!tables{$prev.tag};
+            my $max-len = $dir.offset - $prev.offset;
+            die "length for '{.tag}' {.length} > $max-len"
+                if .length > $max-len;
         }
         $prev = $dir;
     }
 }
 
 multi method buf(Str $tag) {
-    with %!tag-idx{$tag} -> $idx {
-        @!bufs[$idx] //= do with %!tables{$tag} {
-            .pack;
-        } // do {
-            given @!directories[$idx] {
-                with @!lengths[$idx] -> $max-len {
-                    die "length for '$tag' {.length} > $max-len"
-                        if .length > $max-len;
-                }
-                my $offset = .offset;
-                $!fh.seek($offset, SeekFromBeginning);
-                $!fh.read(.length);
-            }
-        }
+    with %!tables{$tag} -> $table {
+        $table.buf //= do with $table.dir {
+            $!fh.seek(.offset, SeekFromBeginning);
+            $!fh.read(.length);
+        } // buf8;
     }
     else {
         buf8;
@@ -140,36 +174,31 @@ multi method buf { self.Blob }
 
 #| add or update a table buffer
 multi method upd(Blob $buf, Str:D :$tag!) {
-    $_ .= WHAT with %!tables{$tag}; # invalidate object
-    my $idx = (%!tag-idx{$tag} //= +%!tag-idx);
-    @!bufs[$idx] = $buf;
+    with %!tables{$tag} {
+        .buf = $buf;
+    }
+    else {
+        $_ .= new: :$buf;
+    }
 }
 
 #| add or update a table object
 multi method upd(Font::TTF::Table $obj) {
-    my $tag = $obj.tag;
-    my $idx = (%!tag-idx{$tag} //= +%!tag-idx);
-    @!bufs[$idx] = Nil;  # invalidate buffer
-    %!tables{$tag} = $obj;
+    with %!tables{$obj.tag} {
+        .obj = $obj;
+    }
+    else {
+        $_ .= new: :$obj;
+    }
 }
 
 multi method load(Str $tag) {
-    self.load: %!tables{$tag}:exists
-        ?? %!tables{$tag}
-        !! Font::TTF::Table::Generic;
-}
-
-multi method load(Font::TTF::Table:D $obj) {
-    $obj
+    my $buf = self.buf($tag);
+    %!tables{$tag}.obj;
 }
 
 multi method load(Font::TTF::Table:U $class) {
-    my $tag = $class.tag;
-    my $rv = $class;
-    with self.buf($tag) -> Blob $buf {
-        $rv .= new: :$buf, :$tag, :loader(self);
-    }
-    $rv;
+    ...
 }
 
 constant Alignment = nativesizeof(long);
@@ -194,22 +223,18 @@ multi sub byte-align(buf8 $buf) {
 }
 
 method pack returns Blob is also<Blob> {
-    # copy or rebuild tables. Preserve input order
     my class ManifestItem {
-        has Directory:D $.dir-in is required;
+        has Str:D $.tag is required;
         has Blob:D $.buf is required;
-        has Directory $.dir-out is rw;
     }
     my ManifestItem @manifest;
-
-    for @!directories -> $dir-in {
-        my $tag := $dir-in.tag;
+    for self.tags -> $tag {
         given self.buf($tag) -> $buf {
-            @manifest.push: ManifestItem.new: :$dir-in, :$buf;
+            @manifest.push: ManifestItem.new: :$tag, :$buf;
         }
     }
 
-    @manifest .= sort(*.dir-in.tag);
+    @manifest .= sort(*.tag);
 
     my uint32  $ver = $!offsets.ver;
     my uint32  $numTables = +@manifest;
@@ -218,14 +243,12 @@ method pack returns Blob is also<Blob> {
     my $offset = Offsets.packed-size  +  $offsets.numTables * Directory.packed-size;
 
     for @manifest {
-        my $dir = .dir-in;
-        my $tag-str = $dir.tag;
-        my uint32 $tag = $dir.tag-encoded;
-        my uint32 $checkSum = sfnt_checksum(.buf, .buf.bytes);
-        my $subbuf = $dir.pack;
+        my $tag-str = .tag;
+        my uint32 $tag = Directory::tag-encode($tag-str);
         my uint32 $length = .buf.bytes;
-        .dir-out = Directory.new: :$offset, :$tag, :$tag-str, :$length, :$checkSum;
-        $buf.append: .dir-out.pack;
+        my uint32 $checkSum = sfnt_checksum(.buf, $length);
+        my Directory $dir .= new: :$offset, :$tag, :$tag-str, :$length, :$checkSum;
+        $buf.append: $dir.pack;
         $offset += $length;
         byte-align($offset);
     }

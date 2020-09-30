@@ -6,16 +6,18 @@ use Font::TTF::Table::GlyphIndex;
 use Font::TTF::Table::MaxProfile;
 use Font::TTF::Raw;
 use File::Temp;
-plan 44;
+plan 45;
 
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
 my Font::TTF:D $ttf .= new: :$fh;
-my $maxp-checksum-in = $ttf.directories.first(*.tag eq 'maxp').checkSum;
+is $ttf.numTables, 17;
+my $maxp-checksum-in = $ttf.directory('maxp').checkSum;
 my $maxp-buf = $ttf.buf('maxp');
 is sfnt_checksum($maxp-buf, $maxp-buf.bytes), $maxp-checksum-in;
 
 (my $filename, $fh) = tempfile;
+$ttf.delete('name');
 $fh.write: $ttf.Blob;
 $fh.close;
 
@@ -23,8 +25,8 @@ $fh.close;
 $fh = $filename.IO.open(:r, :bin);
 $ttf .= new: :$fh;
 
-is $ttf.numTables, 17;
-my $maxp-checksum-out = $ttf.directories.first(*.tag eq 'maxp').checkSum;
+is $ttf.numTables, 16;
+my $maxp-checksum-out = $ttf.directory('maxp').checkSum;
 
 is $maxp-checksum-out, $maxp-checksum-in;
 
