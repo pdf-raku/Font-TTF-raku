@@ -14,7 +14,8 @@ is $format.numGroups, 2;
 is $format.length, 24;
 
 my uint8 @subdata = [
-    0,0,0,12,   # format 12
+    0,12,       # format 12
+    0,0,        # (padding)
     0,0,0,24,   # length 24
     0,0,0,0,    # language
     0,0,0,2,    # 2 groups
@@ -42,6 +43,6 @@ my buf8 $cmap-buf .= new(
 );
 $cmap-buf.append: @subdata;
 
-is-deeply $cmap.buf, $cmap-buf;
+is-deeply $cmap.pack, $cmap-buf;
 
 pass;

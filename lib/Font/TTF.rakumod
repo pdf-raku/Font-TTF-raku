@@ -75,7 +75,7 @@ class TableProxy is rw {
     has Str $.tag is required;
     has Directory $.dir;
     has buf8 $.buf;
-    has $.obj = Font::TTF::Table::Generic.new: :$!tag, :$!buf;
+    has Font::TTF::Table $.obj = Font::TTF::Table::Generic;
     method buf is rw {
         Proxy.new(
             FETCH => { $!buf //= .pack with $!obj; $!buf },
@@ -92,7 +92,7 @@ class TableProxy is rw {
             STORE => -> $, $!obj { $_ = .WHAT with $!buf }
         );
     }
-    method live {
+    method is-live {
         ($!obj // $!buf // $!dir).defined
     }
 }
@@ -112,7 +112,7 @@ has TableProxy %!tables = @KnownTables.map: -> $obj {
 };
 
 method tags {
-    %!tables.values.grep(*.live)>>.tag.sort;
+    %!tables.values.grep(*.is-live)>>.tag.sort;
 }
 
 method directory($tag) { .dir with %!tables{$tag} }
@@ -158,16 +158,20 @@ method !check-lengths(@dirs) {
     }
 }
 
-multi method buf(Str $tag) {
-    with %!tables{$tag} -> $table {
-        $table.buf //= do with $table.dir {
-            $!fh.seek(.offset, SeekFromBeginning);
-            $!fh.read(.length);
-        } // buf8;
-    }
-    else {
-        buf8;
-    }
+multi method buf(Str $tag --> buf8) {
+    do with %!tables{$tag} -> $table {
+        if $table.is-live {
+            $table.buf //= do with $table.obj {
+                warn .raku;
+                .pack;
+            } else {
+                given $table.dir {
+                    $!fh.seek(.offset, SeekFromBeginning);
+                    $!fh.read(.length);
+                }
+            }
+        }
+    } // buf8;
 }
 
 multi method buf { self.Blob }

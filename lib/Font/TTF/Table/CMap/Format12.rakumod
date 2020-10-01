@@ -18,7 +18,7 @@ subset Groups of array[uint32] where .shape[1] ~~ 3;
 has Groups $.groups handles<AT-POS>;  # [variable] Glyph index array
 enum GroupIndex is export(:GroupIndex) <startCharCode endCharCode startGlyphCode>;
 method elems is also<Numeric numGroups> { $!groups.elems }
-method length { self.numGroups * 4  + $!header.packed-size; }
+method length { self.numGroups * 12  + $!header.packed-size; }
 
 multi submethod TWEAK(buf8:D :$buf!) {
     $!header .= unpack($buf);

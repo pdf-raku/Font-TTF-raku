@@ -12,8 +12,6 @@ class Font::TTF::Table::CMap
 
     method tag {'cmap'}
 
-    method buf { callsame() //= self.pack }
-
     class Index is repr('CStruct') does Sfnt-Struct {
         has uint16 $.version;          # Version number (Set to zero)
         has uint16 $.numberSubtables;  # Number of encoding subtables
