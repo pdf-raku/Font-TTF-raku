@@ -56,12 +56,13 @@ class Directory is repr('CStruct') does Sfnt-Struct {
     }
 
     our sub tag-encode(Str:D $s --> UInt) {
+        my @ords = $s.ords;
+        @ords.push: 32 while @ords < 4;
         my uint32 $enc = 0;
-        for $s.ords {
+        for @ords {
             $enc *= 256;
             $enc += $_;
         }
-        $enc ~= ' ' while $enc.chars < 4;
         $enc;
     }
 
