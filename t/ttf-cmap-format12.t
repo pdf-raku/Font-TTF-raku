@@ -11,12 +11,12 @@ is $format.groups[0;startCharCode], 32;
 is $format.groups[1;startCharCode], 44;
 is $format.groups[1;startGlyphCode], 15;
 is $format.numGroups, 2;
-is $format.length, 24;
+is $format.length, 40;
 
-my uint8 @subdata = [
+my uint8 @subdata[40] = [
     0,12,       # format 12
     0,0,        # (padding)
-    0,0,0,24,   # length 24
+    0,0,0,40,   # length 40
     0,0,0,0,    # language
     0,0,0,2,    # 2 groups
     0,0,0,32, 0,0,0,32, 0,0,0,3,
@@ -30,7 +30,7 @@ is $format.groups[0;startCharCode], 32;
 is $format.groups[1;startCharCode], 44;
 is $format.groups[1;startGlyphCode], 15;
 is $format.numGroups, 2;
-is $format.length, 24;
+is $format.length, 40;
 
 my  Font::TTF::Table::CMap $cmap .= new: :$format;
 
