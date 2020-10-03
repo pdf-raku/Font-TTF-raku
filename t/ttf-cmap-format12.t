@@ -32,7 +32,7 @@ is $format.groups[1;startGlyphCode], 15;
 is $format.numGroups, 2;
 is $format.length, 40;
 
-my  Font::TTF::Table::CMap $cmap .= new: :$format;
+my  Font::TTF::Table::CMap $cmap .= new: :tables[$format];
 
 my buf8 $cmap-buf .= new(
    0, 0, # version

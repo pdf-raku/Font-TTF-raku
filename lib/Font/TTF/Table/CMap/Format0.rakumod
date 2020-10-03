@@ -8,9 +8,15 @@ use Font::TTF::Table::CMap::Header16;
 
 has Font::TTF::Table::CMap::Header16 $.header handles<format length language>;
 
-has CArray[uint8] $.glyphIndexArray handles<AT-POS elems>;  # [variable] Glyph index array
+has CArray[uint8] $!glyphIndexArray handles<AT-POS elems>;  # [variable] Glyph index array
 
-submethod TWEAK(buf8:D :$buf!) {
+multi submethod TWEAK(:@glyphIndexArray!) {
+    $!header .= new;
+    $!header.length = 262;
+    $!glyphIndexArray .= new: @glyphIndexArray;
+}
+
+multi submethod TWEAK(buf8:D :$buf!) {
     $!header .= unpack($buf);
     my UInt $offset = $!header.packed-size;
     $!glyphIndexArray .= new;

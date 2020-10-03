@@ -35,7 +35,7 @@ has Header $.header handles<format length language segCountX2 segCount searchRan
 
 has CArray[uint16] $!endCode;          # [segCount] Ending character code for each segment, last = 0xFFFF.
 has uint16 $!reservedPad;              # value should be zero
-has CArray[uint16] $!startCode;         # [segCount] Starting character code for each segment
+has CArray[uint16] $!startCode;        # [segCount] Starting character code for each segment
 has CArray[int16]  $!idDelta;          # [segCount] Delta for all character codes in segment
 has CArray[uint16] $!idRangeOffset;    # [segCount] Offset in bytes to glyph indexArray, or 0
 has CArray[uint16] $!glyphIndexArray;  # [variable] Glyph index array

@@ -21,7 +21,7 @@ class Font::TTF::Table::CMap
         class Encoding is repr('CStruct') does Sfnt-Struct {
             has uint16	$.platformID;   	# Platform identifier
             has uint16	$.platformEncodingID;	# Platform-specific encoding identifier
-            has uint32	$.offset;       	# Offset of the mapping table
+            has uint32	$.offset is rw;       	# Offset of the mapping table
         }
         has Encoding $.encoding handles<platformID platformEncodingID offset pack>;
         has buf8 $.subbuf;
@@ -89,22 +89,42 @@ class Font::TTF::Table::CMap
         self;
     }
 
-    # handle simple case of building a single type-12 encoding table
-    multi submethod TWEAK(Font::TTF::Table::CMap::Format12 :format($object)!) {
+    multi submethod TWEAK( :@tables! ) {
         # wrap formats
-        $!index .= new: :version(0), :numberSubtables(1);
-        my $offset = $!index.packed-size + Subtable::Encoding.packed-size;
-        my Subtable::Encoding $encoding .= new: :platformId(0), :platformEncodingID(4), :$offset;
+        $!index .= new: :version(0), :numberSubtables(+@tables);
 
-        @!subtables = [ Subtable.new: :$encoding, :$object, ];
+        for @tables -> $object {
+            my Subtable::Encoding $encoding = do given $object {
+                when Font::TTF::Table::CMap::Format0 {
+                    Subtable::Encoding.new(:platformID(1), :platformEncodingID(0));
+                }
+                when Font::TTF::Table::CMap::Format4 {
+                    Subtable::Encoding.new(:platformID(3), :platformEncodingID(1));
+                }
+                when Font::TTF::Table::CMap::Format12 {
+                    Subtable::Encoding.new(:platformID(0), :platformEncodingID(4));
+                }
+                default {
+                    fail "unable to pack CMap subtable {.WHAT.raku}";
+                }
+            }
+            @!subtables.push: Subtable.new: :$encoding, :$object;
+        }
     }
+
     method pack(buf8 $buf = buf8.new) {
+        my $header-size = $!index.packed-size +  Subtable::Encoding.packed-size * @!subtables.elems;
+        my buf8 $data-buf .= new;
+
         $buf.reallocate(0);
         $!index.pack($buf);
-        $buf.append(.pack)
-            for @!subtables;
-        $buf.append(.object.pack)
-            for @!subtables;
-        $buf;
+
+        for @!subtables {
+            .offset = $header-size + $data-buf.bytes;
+            $buf.append: .pack;
+            $data-buf.append: .object.pack;
+        }
+
+        $buf.append: $data-buf;
     }
 }
