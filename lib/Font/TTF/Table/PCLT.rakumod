@@ -1,6 +1,6 @@
 use Font::TTF::Table;
 
-class Font::TTF::Table::PCLT is repr('CStruct')
+class Font::TTF::Table::PCLT
     is repr('CStruct')
     does Font::TTF::Table['PCLT'] {
 

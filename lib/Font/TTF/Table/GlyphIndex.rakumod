@@ -24,8 +24,12 @@ class Font::TTF::Table::GlyphIndex
     constant Header = Font::TTF::Table::Header;
     constant MaxProfile = Font::TTF::Table::MaxProfile;
 
-    submethod TWEAK(
-        :$loader,
+    multi submethod TWEAK(:$!offsets! ) {
+        $!scale = $!offsets.of eqv uint16 ?? 2 !! 1;
+    }
+
+    multi submethod TWEAK(
+        :$loader!,
         Header:D :$head     = Header.load($loader),
         MaxProfile:D :$maxp = MaxProfile.load($loader),
         Buf :$buf           = $loader.buf(self.tag),
