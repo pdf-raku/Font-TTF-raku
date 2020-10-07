@@ -1,6 +1,7 @@
 use Font::TTF::Table;
 
 class Font::TTF::Table::Header
+    is rw
     is repr('CStruct')
     does Font::TTF::Table['head'] {
 
