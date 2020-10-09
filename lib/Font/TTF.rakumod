@@ -280,6 +280,7 @@ method !blob {
 
 method pack returns Blob is also<Blob Buf> {
     if $!updated {
+        self.upd(self.head).modified = now;
         self!recalc-checksum();
         $!updated = False;
     }

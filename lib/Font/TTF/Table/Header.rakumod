@@ -14,16 +14,24 @@ class Font::TTF::Table::Header
     has uint16 $.flags;
     has uint16 $.unitsPerEm;
     has longDateTime $.created;
-    sub sfnt-date(Int $date) {
-        constant SfntEpochDiff = -2082844800;
+    constant SfntEpochDiff = -2082844800;
+    sub thaw-sfnt-date(Int $date) {
         DateTime.new: $date + SfntEpochDiff;
     }
+    sub freeze-sfnt-date(Instant $inst) {
+        my longDateTime $ = $inst.round - SfntEpochDiff;
+    }
     method created {
-        sfnt-date($!created);
+        thaw-sfnt-date($!created);
     }
     has longDateTime $.modified;
-    method modified {
-        sfnt-date($!modified);
+    method modified is rw {
+        Proxy.new(
+            FETCH => {thaw-sfnt-date($!modified)},
+            STORE => -> $, Instant $t {
+                $!modified = freeze-sfnt-date($t);
+            }
+        );
     }
     has FWord  $.xMin;
     has FWord  $.yMin;

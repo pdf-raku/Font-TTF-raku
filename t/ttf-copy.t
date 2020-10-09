@@ -40,7 +40,7 @@ isnt $head.checkSumAdjustment, $checksum-adjustment-orig;
 is $head.magicNumber, 1594834165;
 is $head.flags, 31;
 is $head.created, '2003-04-09T15:46:00Z';
-is $head.modified, '2003-04-16T01:51:13Z';
+ok $head.modified gt '2020-09-10T00:00:00Z';
 is $head.fontDirectionHint, 1;
 is $head.glyphDataFormat, 0;
 is $head.lowestRecPPEM, 8;
