@@ -5,7 +5,6 @@ class Font::TTF::Table::VertMetrics
 
     use Font::TTF::Defs :Sfnt-Struct;
     use Font::TTF::Table::VertHeader;
-    use Font::TTF::Table::MaxProfile;
     use CStruct::Packing :&mem-unpack, :&mem-pack;
     use NativeCall;
 
@@ -44,7 +43,6 @@ class Font::TTF::Table::VertMetrics
     }
 
     constant VertHeader = Font::TTF::Table::VertHeader;
-    constant MaxProfile = Font::TTF::Table::MaxProfile;
 
     multi submethod TWEAK(
         :$loader!,

@@ -12,6 +12,7 @@ my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
 my Font::TTF:D $ttf .= new: :$fh;
 is $ttf.numTables, 17;
+my $checksum-adjustment-orig = $ttf.head.checkSumAdjustment;
 my $maxp-checksum-in = $ttf.directory('maxp').checkSum;
 my $maxp-buf = $ttf.buf('maxp');
 is sfnt_checksum($maxp-buf, $maxp-buf.bytes), $maxp-checksum-in;
@@ -34,7 +35,8 @@ my Font::TTF::Table::Header $head .= load($ttf);
 
 is $head.version, 1;
 is $head.fontRevision, 2;
-is $head.checkSumAdjustment, 206572268;
+
+isnt $head.checkSumAdjustment, $checksum-adjustment-orig;
 is $head.magicNumber, 1594834165;
 is $head.flags, 31;
 is $head.created, '2003-04-09T15:46:00Z';

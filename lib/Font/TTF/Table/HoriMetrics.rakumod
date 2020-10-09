@@ -5,7 +5,6 @@ class Font::TTF::Table::HoriMetrics
 
     use Font::TTF::Defs :Sfnt-Struct;
     use Font::TTF::Table::HoriHeader;
-    use Font::TTF::Table::MaxProfile;
     use CStruct::Packing :&mem-unpack, :&mem-pack;
     use NativeCall;
 

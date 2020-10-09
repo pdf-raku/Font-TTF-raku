@@ -97,8 +97,6 @@ class TableProxy is rw {
         ($!obj // $!buf // $!dir).defined
     }
 }
-has IO::Handle:D $.fh is required;
-has Offsets $!offsets handles<numTables>;
 
 our @KnownTables = [
     Font::TTF::Table::CMap, Font::TTF::Table::Header,
@@ -107,10 +105,14 @@ our @KnownTables = [
     Font::TTF::Table::VertHeader, Font::TTF::Table::VertMetrics,
     Font::TTF::Table::PCLT, Font::TTF::Table::OS2,
 ];
+
+has IO::Handle:D $.fh is required;
+has Offsets $!offsets handles<numTables>;
 has TableProxy %!tables = @KnownTables.map: -> $obj {
     my $tag = $obj.tag;
     $tag => TableProxy.new: :$obj, :$tag, :loader(self);
 };
+has Bool $!updated;
 
 method tags {
     %!tables.values.grep(*.is-live)>>.tag.sort;
@@ -120,6 +122,7 @@ method directory($tag) { .dir with %!tables{$tag} }
 
 method delete($tag) {
     with %!tables{$tag} {
+         $!updated = True;
         .buf = buf8;
         .dir = Directory;
     }
@@ -179,6 +182,7 @@ multi method buf { self.Blob }
 
 #| add or update a table buffer
 multi method upd(Blob $buf, Str:D :$tag!) {
+    $!updated = True;
     with %!tables{$tag} {
         .buf = $buf;
     }
@@ -189,6 +193,7 @@ multi method upd(Blob $buf, Str:D :$tag!) {
 
 #| add or update a table object
 multi method upd(Font::TTF::Table $obj) {
+    $!updated = True;
     with %!tables{$obj.tag} {
         .obj = $obj;
     }
@@ -200,10 +205,6 @@ multi method upd(Font::TTF::Table $obj) {
 multi method load(Str $tag) {
     my $buf = self.buf($tag);
     %!tables{$tag}.obj;
-}
-
-multi method load(Font::TTF::Table:U $class) {
-    ...
 }
 
 constant Alignment = nativesizeof(long);
@@ -227,7 +228,20 @@ multi sub byte-align(buf8 $buf) {
     $buf;
 }
 
-method pack returns Blob is also<Blob> {
+method !recalc-checksum {
+    given self.head {
+        # recalculate header checksum
+        .checkSumAdjustment = 0;
+         self.upd($_);
+
+         my buf8 $buf = self!blob;
+         my uint32 $checksum = 0xB1B0AFBA - sfnt_checksum($buf, $buf.bytes);
+         .checkSumAdjustment = $checksum;
+         self.upd($_);
+    }
+}
+
+method !blob {
     my class ManifestItem {
         has Str:D $.tag is required;
         has Blob:D $.buf is required;
@@ -262,6 +276,14 @@ method pack returns Blob is also<Blob> {
         byte-align($buf);
     }
     $buf;
+}
+
+method pack returns Blob is also<Blob Buf> {
+    if $!updated {
+        self!recalc-checksum();
+        $!updated = False;
+    }
+    self!blob;
 }
 
 method glyph-buf(UInt:D $gid --> buf8:D) {
