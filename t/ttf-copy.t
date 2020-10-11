@@ -5,7 +5,6 @@ use Font::TTF::Table::Header;
 use Font::TTF::Table::GlyphIndex;
 use Font::TTF::Table::MaxProfile;
 use Font::TTF::Raw;
-use File::Temp;
 plan 44;
 
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
