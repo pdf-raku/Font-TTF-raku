@@ -25,21 +25,25 @@ class Font::TTF::Table::HoriMetrics
         has uint16 $.leftSideBearing;
     }
 
-    multi method AT-POS(Int() $gid where 0 <= * <= $!num-long-metrics) is default {
-        my $offset := 4 * $gid;
-        longHoriMetric.unpack($!buf, :$offset);
-    }
-
-    multi method AT-POS(Int() $gid where 0 <= * <= $!num-glyphs) {
-        my $offset := 2 * $!num-long-metrics + 2 * $gid;
-        my $rv := shortHoriMetric.unpack($!buf, :$offset);
-        if $!num-long-metrics {
-            # advanceWidth is inherited from last long metric
-            my $advanceWidth  := self.AT-POS($!num-long-metrics - 1).advanceWidth;
-            my $leftSideBearing := $rv.leftSideBearing;
-            $rv := longHoriMetric.new: :$advanceWidth, :$leftSideBearing;
+    method AT-POS(UInt:D $gid) {
+        when $gid <= $!num-long-metrics {
+            my $offset := 4 * $gid;
+            longHoriMetric.unpack($!buf, :$offset);
         }
-        $rv;
+        when $gid <= $!num-glyphs {
+            my $offset := 2 * $!num-long-metrics + 2 * $gid;
+            my $rv := shortHoriMetric.unpack($!buf, :$offset);
+            if $!num-long-metrics {
+                # advanceWidth is inherited from last long metric
+                my $advanceWidth  := self.AT-POS($!num-long-metrics - 1).advanceWidth;
+                my $leftSideBearing := $rv.leftSideBearing;
+                $rv := longHoriMetric.new: :$advanceWidth, :$leftSideBearing;
+            }
+            $rv;
+        }
+        default {
+            shortHoriMetric;
+        }
     }
 
     constant HoriHeader = Font::TTF::Table::HoriHeader;

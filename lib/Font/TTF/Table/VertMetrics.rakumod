@@ -25,21 +25,25 @@ class Font::TTF::Table::VertMetrics
         has uint16 $.topSideBearing;
     }
 
-    multi method AT-POS(Int() $gid where 0 <= * <= $!num-long-metrics) is default {
-        my $offset := 4 * $gid;
-        longVertMetric.unpack($!buf, :$offset);
-    }
-
-    multi method AT-POS(Int() $gid where 0 <= * <= $!num-glyphs) {
-        my $offset := 2 * $!num-long-metrics + 2 * $gid;
-        my $rv := shortVertMetric.unpack($!buf, :$offset);
-        if $!num-long-metrics {
-            # advanceHeight is inherited from last long metric
-            my $advanceHeight  := self.AT-POS($!num-long-metrics - 1).advanceHeight;
-            my $topSideBearing := $rv.topSideBearing;
-            $rv := longVertMetric.new: :$advanceHeight, :$topSideBearing;
+    method AT-POS(UInt:D $gid) {
+        when $gid <= $!num-long-metrics {
+            my $offset := 4 * $gid;
+            longVertMetric.unpack($!buf, :$offset);
         }
-        $rv;
+        when $gid <= $!num-glyphs {
+            my $offset := 2 * $!num-long-metrics + 2 * $gid;
+            my $rv := shortVertMetric.unpack($!buf, :$offset);
+            if $!num-long-metrics {
+                # advanceHeight is inherited from last long metric
+                my $advanceHeight  := self.AT-POS($!num-long-metrics - 1).advanceHeight;
+                my $topSideBearing := $rv.topSideBearing;
+                $rv := longVertMetric.new: :$advanceHeight, :$topSideBearing;
+            }
+            $rv;
+        }
+        default {
+            shortVertMetric;
+        }
     }
 
     constant VertHeader = Font::TTF::Table::VertHeader;

@@ -18,6 +18,31 @@ use Font::TTF::Table::Generic;
 use NativeCall;
 use Method::Also;
 
+role Input {
+    method seek {...}
+    method read {...}
+}
+
+class InputIO does Input {
+    has IO::Handle:D $.fh is required handles<read>;
+    method seek(UInt $pos) {
+        $!fh.seek($pos, SeekFromBeginning);
+    }
+}
+
+class BufIO does Input {
+    has Blob:D $.buf is required;
+    has UInt:D $!pos = 0;
+    method seek($offset) {
+        $!pos = min($!buf.bytes, $offset);
+    }
+    method read(UInt:D $n) {
+        my $rv := $!buf.subbuf($!pos, $n);
+        $!pos += $rv.bytes;
+        $rv;
+    }
+}
+
 class Offsets is repr('CStruct') does Sfnt-Struct {
     has uint32  $.ver;
     has uint16  $.numTables;
@@ -71,6 +96,7 @@ class Directory is repr('CStruct') does Sfnt-Struct {
         tag-decode($!tag);
     }
 }
+
 class TableProxy is rw {
     has $.loader is required;
     has Str $.tag is required;
@@ -106,13 +132,13 @@ our @KnownTables = [
     Font::TTF::Table::PCLT, Font::TTF::Table::OS2,
 ];
 
-has IO::Handle:D $.fh is required;
+has Input $.input is built;
 has Offsets $!offsets handles<numTables>;
 has TableProxy %!tables = @KnownTables.map: -> $obj {
     my $tag = $obj.tag;
     $tag => TableProxy.new: :$obj, :$tag, :loader(self);
 };
-has Bool $!updated;
+has Bool $!updated = True;
 
 method tags {
     %!tables.values.grep(*.is-live)>>.tag.sort;
@@ -128,13 +154,13 @@ method delete($tag) {
     }
 }
 
-submethod TWEAK {
+method !init() {
     my Directory @dirs;
-    $!fh.seek(0, SeekFromBeginning);
-    $!offsets .= read($!fh);
+    $!input.seek(0);
+    $!offsets .= read($!input);
 
     for 0 ..^ $!offsets.numTables {
-        my Directory $dir .= read($!fh);
+        my Directory $dir .= read($!input);
         my $tag = $dir.tag;
         with %!tables{$tag} {
             .dir = $dir;
@@ -146,6 +172,16 @@ submethod TWEAK {
     }
 
     self!check-lengths(@dirs);
+}
+
+multi submethod TWEAK(IO::Handle:D :$fh!) {
+    $!input = InputIO.new: :$fh;
+    self!init();
+}
+
+multi submethod TWEAK(Blob:D :$buf!) {
+    $!input = BufIO.new: :$buf;
+    self!init();
 }
 
 method !check-lengths(@dirs) {
@@ -170,8 +206,8 @@ multi method buf(Str $tag --> buf8) {
                 .pack;
             } else {
                 given $table.dir {
-                    $!fh.seek(.offset, SeekFromBeginning);
-                    $!fh.read(.length);
+                    $!input.seek(.offset);
+                    $!input.read(.length);
                 }
             }
         }
@@ -280,7 +316,6 @@ method !blob {
 
 method pack returns Blob is also<Blob Buf> {
     if $!updated {
-        self.upd(self.head).modified = now;
         self!recalc-checksum();
         $!updated = False;
     }

@@ -8,7 +8,6 @@
   ],
     "depends": [
       "CStruct::Packing",
-      "File::Temp",
       "Method::Also"
   ],
   "description": "Open/TrueType Font manipulation API",

@@ -18,7 +18,8 @@ class Font::TTF::Table::GlyphIndex
     has UInt $!scale;
 
     method AT-POS(Int() $idx where 0 <= * <= $!num-glyphs) {
-        $!offsets[$idx] * $!scale;
+        my uint16 $v = $!offsets[$idx];
+        $v * $!scale;
     }
 
     constant Header = Font::TTF::Table::Header;

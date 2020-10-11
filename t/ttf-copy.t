@@ -6,7 +6,7 @@ use Font::TTF::Table::GlyphIndex;
 use Font::TTF::Table::MaxProfile;
 use Font::TTF::Raw;
 use File::Temp;
-plan 45;
+plan 44;
 
 my $fh = "t/fonts/Vera.ttf".IO.open(:r, :bin);
 
@@ -17,14 +17,10 @@ my $maxp-checksum-in = $ttf.directory('maxp').checkSum;
 my $maxp-buf = $ttf.buf('maxp');
 is sfnt_checksum($maxp-buf, $maxp-buf.bytes), $maxp-checksum-in;
 
-(my $filename, $fh) = tempfile;
 $ttf.delete('name');
-$fh.write: $ttf.Blob;
-$fh.close;
 
-# read-read the file
-$fh = $filename.IO.open(:r, :bin);
-$ttf .= new: :$fh;
+my Blob:D $buf = $ttf.Blob;
+$ttf .= new: :$buf;
 
 is $ttf.numTables, 16;
 my $maxp-checksum-out = $ttf.directory('maxp').checkSum;
@@ -40,7 +36,6 @@ isnt $head.checkSumAdjustment, $checksum-adjustment-orig;
 is $head.magicNumber, 1594834165;
 is $head.flags, 31;
 is $head.created, '2003-04-09T15:46:00Z';
-ok $head.modified gt '2020-09-10T00:00:00Z';
 is $head.fontDirectionHint, 1;
 is $head.glyphDataFormat, 0;
 is $head.lowestRecPPEM, 8;
