@@ -18,7 +18,10 @@ class Font::TTF::Table::GlyphIndex
     has UInt $!scale;
 
     method AT-POS(Int() $idx where 0 <= * <= $!num-glyphs) {
-        my uint32 $v = $!offsets[$idx];
+        my $v = $!offsets[$idx];
+        # work around signing bugs
+        $v += 0x100 ** nativesizeof($!offsets.of)
+            if $v < 0;
         $v * $!scale;
     }
 
