@@ -1,6 +1,6 @@
 use Font::TTF::Table;
 
-class Font::TTF::Postscript
+class Font::TTF::Table::Postscript
     is repr('CStruct')
     does Font::TTF::Table['post'] {
 

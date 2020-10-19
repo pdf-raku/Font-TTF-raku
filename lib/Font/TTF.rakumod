@@ -4,17 +4,19 @@ use CStruct::Packing :Endian;
 use Font::TTF::Defs :Sfnt-Struct;
 use Font::TTF::Raw;
 use Font::TTF::Table;
+use Font::TTF::Table::Generic;
 use Font::TTF::Table::CMap;
+use Font::TTF::Table::GlyphIndex;
 use Font::TTF::Table::Header;
 use Font::TTF::Table::HoriHeader;
 use Font::TTF::Table::HoriMetrics;
-use Font::TTF::Table::VertHeader;
-use Font::TTF::Table::VertMetrics;
-use Font::TTF::Table::GlyphIndex;
+use Font::TTF::Table::Kern;
+use Font::TTF::Table::MaxProfile;
 use Font::TTF::Table::OS2;
 use Font::TTF::Table::PCLT;
-use Font::TTF::Table::MaxProfile;
-use Font::TTF::Table::Generic;
+use Font::TTF::Table::Postscript;
+use Font::TTF::Table::VertHeader;
+use Font::TTF::Table::VertMetrics;
 use NativeCall;
 use Method::Also;
 
@@ -23,14 +25,14 @@ role Input {
     method read {...}
 }
 
-class InputIO does Input {
+class InputFH does Input {
     has IO::Handle:D $.fh is required handles<read>;
     method seek(UInt $pos) {
         $!fh.seek($pos, SeekFromBeginning);
     }
 }
 
-class BufIO does Input {
+class InputBuf does Input {
     has Blob:D $.buf is required;
     has UInt:D $!pos = 0;
     method seek($offset) {
@@ -125,11 +127,12 @@ class TableProxy is rw {
 }
 
 our @KnownTables = [
-    Font::TTF::Table::CMap, Font::TTF::Table::Header,
+    Font::TTF::Table::CMap,       Font::TTF::Table::Header,
     Font::TTF::Table::HoriHeader, Font::TTF::Table::HoriMetrics,
-    Font::TTF::Table::GlyphIndex, Font::TTF::Table::MaxProfile,
+    Font::TTF::Table::GlyphIndex, Font::TTF::Table::Kern,
+    Font::TTF::Table::MaxProfile, Font::TTF::Table::OS2,
+    Font::TTF::Table::PCLT,       Font::TTF::Table::Postscript,
     Font::TTF::Table::VertHeader, Font::TTF::Table::VertMetrics,
-    Font::TTF::Table::PCLT, Font::TTF::Table::OS2,
 ];
 
 has Input $.input is built;
@@ -138,7 +141,7 @@ has TableProxy %!tables = @KnownTables.map: -> $obj {
     my $tag = $obj.tag;
     $tag => TableProxy.new: :$obj, :$tag, :loader(self);
 };
-has Bool $!updated = True;
+has Bool $!built;
 
 method tags {
     %!tables.values.grep(*.is-live)>>.tag.sort;
@@ -148,7 +151,7 @@ method directory($tag) { .dir with %!tables{$tag} }
 
 method delete($tag) {
     with %!tables{$tag} {
-         $!updated = True;
+         $!built = False;
         .buf = buf8;
         .dir = Directory;
     }
@@ -175,12 +178,12 @@ method !init() {
 }
 
 multi submethod TWEAK(IO::Handle:D :$fh!) {
-    $!input = InputIO.new: :$fh;
+    $!input = InputFH.new: :$fh;
     self!init();
 }
 
 multi submethod TWEAK(Blob:D :$buf!) {
-    $!input = BufIO.new: :$buf;
+    $!input = InputBuf.new: :$buf;
     self!init();
 }
 
@@ -218,7 +221,7 @@ multi method buf { self.Blob }
 
 #| add or update a table buffer
 multi method upd(Blob $buf, Str:D :$tag!) {
-    $!updated = True;
+    $!built = False;
     with %!tables{$tag} {
         .buf = $buf;
     }
@@ -229,7 +232,7 @@ multi method upd(Blob $buf, Str:D :$tag!) {
 
 #| add or update a table object
 multi method upd(Font::TTF::Table $obj) {
-    $!updated = True;
+    $!built = False;
     with %!tables{$obj.tag} {
         .obj = $obj;
     }
@@ -315,10 +318,9 @@ method !blob {
 }
 
 method pack returns Blob is also<Blob Buf> {
-    if $!updated {
-        self!recalc-checksum();
-        $!updated = False;
-    }
+    self!recalc-checksum()
+        unless $!built++;
+
     self!blob;
 }
 

@@ -28,6 +28,22 @@ class Font::TTF::Table::CMap
         method subbuf {
             $!subbuf //= self.object.buf;
         }
+        method !delegate(UInt:D $_) {
+            when 262 {
+                # actually format 0 (2 bytes) + length 262 (2 bytes)
+                Font::TTF::Table::CMap::Format0;
+            }
+            when 4 {
+                Font::TTF::Table::CMap::Format4;
+            }
+            when 12 {
+                Font::TTF::Table::CMap::Format12;
+            }
+            default {
+                warn "todo CMap format $_";
+                Font::TTF::Table::CMap::Generic;
+            }
+        }
         has $.object;
         method object(Subtable:D:) {
             $!object //= do {
@@ -36,22 +52,7 @@ class Font::TTF::Table::CMap
                 my UInt $format = $!subbuf.read-uint16(0, NetworkEndian)
                     || $!subbuf.read-uint32(0, NetworkEndian);
 
-                my $class = do given $format {
-                    when 262 {
-                        # actually format 0 (2 bytes) + length 262 (2 bytes)
-                        Font::TTF::Table::CMap::Format0;
-                    }
-                    when 4 {
-                        Font::TTF::Table::CMap::Format4;
-                    }
-                    when 12 {
-                        Font::TTF::Table::CMap::Format12;
-                    }
-                    default {
-                        warn "todo format $_";
-                        Font::TTF::Table::CMap::Generic;
-                    }
-                }
+                my $class = self!delegate($format);
                 $class.new: :buf($!subbuf);
             }
         }
