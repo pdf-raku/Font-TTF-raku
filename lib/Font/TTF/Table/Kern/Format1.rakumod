@@ -18,13 +18,15 @@ class Header is repr('CStruct') does Sfnt-Struct {
 }
 
 constant RecSize = KernPair.packed-size;
-has Header $.header handles <nPairs>;
+has Header $.header;
 has buf8 $!data;
 
 submethod TWEAK(buf8:D :subbuf($buf)!) {
     $!header .= unpack($buf);
     $!data = $buf.subbuf(Header.packed-size);
 }
+
+method elems { $!header.nPairs }
 
 method AT-POS(UInt:D $i) {
     my $offset = $i * RecSize;

@@ -45,7 +45,7 @@ class Font::TTF::Table::CMap
             }
         }
         has $.object;
-        method object(Subtable:D:) {
+        method object(Subtable:D:) handles<AT-POS elems> {
             $!object //= do {
                 # Peek at the first two fields, which are always
                 # format and length

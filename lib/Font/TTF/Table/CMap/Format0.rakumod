@@ -24,6 +24,12 @@ multi submethod TWEAK(buf8:D :$buf!) {
     mem-unpack($!glyphIndexArray, $buf.subbuf($offset), :endian(NetworkEndian));
 }
 
+method encode(UInt:D \c) {
+    c < 256
+        ?? $!glyphIndexArray[c]
+        !! 0;
+}
+
 method pack(buf8 $buf = buf8.new) {
     $buf.reallocate(0);
     $!header.pack($buf);

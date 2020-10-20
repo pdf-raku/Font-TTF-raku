@@ -107,7 +107,7 @@ subtest 'loca' => {
 }
 
 subtest 'cmap' => {
-    plan 16;
+    plan 22;
     my Font::TTF::Table::CMap $cmap .= load($ttf);
     is $cmap.elems, 2;
 
@@ -120,6 +120,8 @@ subtest 'cmap' => {
     is $subtable.length, 262;
     is $subtable[32], 3;  # space
     is $subtable[65], 36; # A
+    is $subtable.encode(32), 3;
+    is $subtable.encode(65), 36;
 
     is $cmap[1].platformID, 3;
     is $cmap[1].platformEncodingID, 1;
@@ -129,6 +131,12 @@ subtest 'cmap' => {
     is $subtable.format, 4;
     is $subtable.length, 574;
     is $subtable.segCount, 29;
+
+    constant Tuple = Font::TTF::Table::CMap::Format4::Tuple;
+    $subtable[0].&is-deeply: Tuple.new(endCode => 126, startCode => 32, idDelta => -29, idRangeOffset => 0);
+    $subtable[1].&is-deeply: Tuple.new(endCode => 255, startCode => 160, idDelta => 0, idRangeOffset => 56);
+    is $subtable.encode(32), 3;
+    is $subtable.encode(65), 36;
 }
 
 subtest 'glyf' => {
@@ -138,13 +146,14 @@ subtest 'glyf' => {
 }
 
 subtest 'kern' => {
-    plan 12;
+    plan 11;
     my Font::TTF::Table::Kern $kern.= load($ttf);
     given $kern.index {
         is .version, 0;
         is .nTables, 1;
     }
     given $kern.subtables[0] {
+        constant KernPair = Font::TTF::Table::Kern::Format1::KernPair;
         is .coverage, 1;
         is-deeply .format, 1;
         is .tupleIndex, 0;
@@ -153,14 +162,9 @@ subtest 'kern' => {
             is-deeply .is-cross-stream, False;
             is-deeply .is-variation, False;
         }
-        given .[0].object -> $object {
-            $object.&isa-ok: Font::TTF::Table::Kern::Format1;
-            is $object.nPairs, 1940;
-
-            constant KernPair = Font::TTF::Table::Kern::Format1::KernPair;
-            $object[0].&is-deeply: KernPair.new(:left(16), :right(36), :value(-45));
-            $object[1].&is-deeply: KernPair.new(:left(16), :right(37), :value(-73));
-        }
+        is .elems, 1940;
+        .[0].&is-deeply: KernPair.new(:left(16), :right(36), :value(-45));
+        .[1].&is-deeply: KernPair.new(:left(16), :right(37), :value(-73));
     }
 }
 

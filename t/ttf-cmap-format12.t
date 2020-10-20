@@ -2,7 +2,7 @@ use Test;
 use Font::TTF::Table::CMap;
 use Font::TTF::Table::CMap::Format12 :GroupIndex;
 
-plan 13;
+plan 15;
 
 my uint32 @groups[2;3] Z= (32, 32, 3,  44, 44, 15);
 
@@ -31,6 +31,8 @@ is $format.groups[1;startCharCode], 44;
 is $format.groups[1;startGlyphCode], 15;
 is $format.numGroups, 2;
 is $format.length, 40;
+is $format.encode(32), 3;
+is $format.encode(44), 15;
 
 my  Font::TTF::Table::CMap $cmap .= new: :tables[$format];
 

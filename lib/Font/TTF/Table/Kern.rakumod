@@ -66,7 +66,7 @@ class Font::TTF::Table::Kern
             }
         }
         has $.object;
-        method object(Subtable:D:) {
+        method object(Subtable:D:) handles<AT-POS elems> {
             $!object //= self!delegate.new: :$!subbuf;
         }
     }

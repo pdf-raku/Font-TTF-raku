@@ -71,6 +71,44 @@ multi submethod TWEAK(buf8:D :$buf!) {
     unpack-array($!glyphIndexArray, $buf, $offset += $seg-len);
 }
 
+method elems {
+    self.segCountX2;
+}
+
+class Tuple is repr('CStruct') {
+    has uint16 $.endCode;
+    has uint16 $.startCode;
+    has int16  $.idDelta;
+    has uint16 $.idRangeOffset;
+}
+
+multi method AT-POS(UInt:D \i where i < self.elems) is default {
+    my $startCode       := $!startCode[i];
+    my $endCode         := $!endCode[i];
+    my $idDelta         := $!idDelta[i];
+    my $idRangeOffset   := $!idRangeOffset[i];
+    Tuple.new: :$startCode, :$endCode, :$idDelta, :$idRangeOffset;
+}
+
+multi method AT-POS(UInt:D) { Tuple }
+
+method encode(UInt:D \c) {
+    with (0 ..^ $.elems).first({$!startCode[$_] <= c <= $!endCode[$_]}) {
+        given self[$_] {
+            if .idRangeOffset {
+                my \idx = (.idRangeOffset div 2) + (c - .startCode);
+                $!glyphIndexArray[idx] + .idDelta;
+            }
+            else {
+                .idDelta + c;
+            }
+        }
+    }
+    else {
+        0;
+    }
+}
+
 method pack(buf8 $buf = buf8.new) {
     my $endian = NetworkEndian;
 

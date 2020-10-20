@@ -37,6 +37,15 @@ multi submethod TWEAK( :$!groups!) {
     $!header .= new: :format(12), :$length, :language(0), :$numGroups;
 }
 
+method encode(UInt:D \c) {
+    with (0 ..^ $.elems).first({$!groups[$_;startCharCode] <= c <= $!groups[$_;endCharCode]}) {
+        $!groups[$_;startGlyphCode] + c - $!groups[$_;startCharCode];
+    }
+    else {
+        0;
+    }
+}
+
 method pack(buf8 $buf = buf8.new) {
     $buf.reallocate(0);
     $!header.length = self.length;
